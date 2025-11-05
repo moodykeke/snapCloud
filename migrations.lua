@@ -453,5 +453,126 @@ return {
             ON submissions(student_id, assignment_id, version DESC)
         ]])
     end,
+    
+    -- 班级管理系统迁移
+    ['2025-11-05:3'] = function ()
+        local schema = require('lapis.db.schema')
+        local types = schema.types
+        
+        -- 1. 扩展 collections 表，添加 is_class 字段
+        schema.add_column('collections', 'is_class', types.boolean({ default = false, null = false }))
+        
+        -- 2. 为班级类型创建索引
+        db.query([[
+            CREATE INDEX collections_is_class_idx 
+            ON collections(is_class) WHERE is_class = true
+        ]])
+        
+        -- 3. 创建 class_memberships 表
+        schema.create_table('class_memberships', {
+            { 'id', types.serial({ primary_key = true }) },
+            { 'class_id', types.integer({ null = false }) },
+            { 'student_id', types.integer({ null = false }) },
+            { 'joined_at', types.time({ timezone = true, default = db.raw("now()") }) },
+            { 'student_note', types.text },
+            { 'is_active', types.boolean({ default = true, null = false }) },
+            { 'deleted_at', types.time({ timezone = true }) }
+        })
+        
+        -- 4. 添加外键
+        schema.add_column('class_memberships', 'class_id',
+            types.foreign_key({ name = 'class_memberships_class_id_fkey', references = 'collections', on_delete = 'CASCADE' }))
+        schema.add_column('class_memberships', 'student_id',
+            types.foreign_key({ name = 'class_memberships_student_id_fkey', references = 'users', on_delete = 'CASCADE' }))
+        
+        -- 5. 添加唯一约束
+        db.query([[
+            ALTER TABLE class_memberships 
+            ADD CONSTRAINT class_memberships_class_student_unique 
+            UNIQUE (class_id, student_id)
+        ]])
+        
+        -- 6. 创建索引
+        db.query([[
+            CREATE INDEX class_memberships_class_id_idx 
+            ON class_memberships(class_id) WHERE deleted_at IS NULL
+        ]])
+        
+        db.query([[
+            CREATE INDEX class_memberships_student_id_idx 
+            ON class_memberships(student_id) WHERE deleted_at IS NULL
+        ]])
+        
+        db.query([[
+            CREATE INDEX class_memberships_active_idx 
+            ON class_memberships(class_id, is_active) 
+            WHERE deleted_at IS NULL AND is_active = true
+        ]])
+        
+        -- 7. 创建班级统计视图
+        db.query([[
+            CREATE OR REPLACE VIEW class_stats AS
+            SELECT 
+                c.id AS class_id,
+                c.name AS class_name,
+                c.creator_id AS teacher_id,
+                c.created_at,
+                COUNT(DISTINCT cm.student_id) FILTER (WHERE cm.is_active AND cm.deleted_at IS NULL) AS active_student_count,
+                COUNT(DISTINCT cm.student_id) FILTER (WHERE cm.deleted_at IS NULL) AS total_student_count,
+                COUNT(DISTINCT a.id) FILTER (WHERE a.deleted = false AND a.published = true) AS published_assignment_count,
+                COUNT(DISTINCT a.id) FILTER (WHERE a.deleted = false) AS total_assignment_count
+            FROM collections c
+            LEFT JOIN class_memberships cm ON c.id = cm.class_id
+            LEFT JOIN assignments a ON c.id = a.collection_id
+            WHERE c.is_class = true
+            GROUP BY c.id, c.name, c.creator_id, c.created_at
+        ]])
+        
+        -- 8. 创建学生班级列表视图
+        db.query([[
+            CREATE OR REPLACE VIEW student_classes AS
+            SELECT 
+                cm.student_id,
+                cm.class_id,
+                c.name AS class_name,
+                c.creator_id AS teacher_id,
+                u.username AS teacher_username,
+                cm.joined_at,
+                cm.student_note,
+                cm.is_active
+            FROM class_memberships cm
+            JOIN collections c ON cm.class_id = c.id
+            JOIN users u ON c.creator_id = u.id
+            WHERE cm.deleted_at IS NULL 
+              AND u.deleted IS NULL
+              AND c.is_class = true
+        ]])
+        
+        -- 9. 创建班级成员详情视图
+        db.query([[
+            CREATE OR REPLACE VIEW class_members_detail AS
+            SELECT 
+                cm.id AS membership_id,
+                cm.class_id,
+                c.name AS class_name,
+                cm.student_id,
+                u.username AS student_username,
+                u.email AS student_email,
+                u.created AS student_created_at,
+                cm.joined_at,
+                cm.student_note,
+                cm.is_active,
+                COUNT(DISTINCT s.assignment_id) AS submitted_assignment_count,
+                COUNT(DISTINCT s.id) FILTER (WHERE s.grade IS NOT NULL) AS graded_submission_count,
+                AVG(s.points) FILTER (WHERE s.grade IS NOT NULL) AS average_points
+            FROM class_memberships cm
+            JOIN collections c ON cm.class_id = c.id
+            JOIN users u ON cm.student_id = u.id
+            LEFT JOIN submissions s ON cm.student_id = s.student_id
+            LEFT JOIN assignments a ON s.assignment_id = a.id AND a.collection_id = cm.class_id
+            WHERE cm.deleted_at IS NULL
+            GROUP BY cm.id, cm.class_id, c.name, cm.student_id, u.username, u.email, u.created, cm.joined_at, cm.student_note, cm.is_active
+        ]])
+    end,
 
 }

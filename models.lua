@@ -29,6 +29,7 @@ package.loaded.Model = require('lapis.db.model').Model
 
 package.loaded.Assignments = require("models.assignments")
 package.loaded.BannedIPs = require("models.banned_ips")
+package.loaded.ClassMemberships = require("models.class_memberships")
 package.loaded.CollectionMemberships = require("models.collection_memberships")
 package.loaded.Collections = require("models.collections" )
 package.loaded.FeaturedCollections = require("models.featured_collections")
