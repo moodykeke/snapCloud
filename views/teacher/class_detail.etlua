@@ -12,7 +12,7 @@ let allStudents = []; // 所有可添加的学生
 // 加载班级详情
 async function loadClassDetails() {
     try {
-        const response = await fetch(`/api/classes/${classId}`);
+        const response = await fetch(`/api/v1/classes/${classId}`);
         const data = await response.json();
         
         if (data.success) {
@@ -30,7 +30,7 @@ async function loadClassDetails() {
 // 加载成员列表
 async function loadMembers() {
     try {
-        const response = await fetch(`/api/classes/${classId}/members`);
+        const response = await fetch(`/api/v1/classes/${classId}/members`);
         const data = await response.json();
         
         if (data.success) {
@@ -163,7 +163,7 @@ async function addStudent() {
     }
     
     try {
-        const response = await fetch(`/api/classes/${classId}/members`, {
+        const response = await fetch(`/api/v1/classes/${classId}/members`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ student_id: parseInt(studentId), student_note: studentNote })
@@ -188,7 +188,7 @@ async function addStudent() {
 // 切换学生激活状态
 async function toggleMemberActive(studentId) {
     try {
-        const response = await fetch(`/api/classes/${classId}/members/${studentId}/toggle`, {
+        const response = await fetch(`/api/v1/classes/${classId}/members/${studentId}/toggle`, {
             method: 'POST'
         });
         
@@ -213,7 +213,7 @@ async function removeMember(studentId, username) {
     }
     
     try {
-        const response = await fetch(`/api/classes/${classId}/members/${studentId}`, {
+        const response = await fetch(`/api/v1/classes/${classId}/members/${studentId}`, {
             method: 'DELETE'
         });
         

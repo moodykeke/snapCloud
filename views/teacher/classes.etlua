@@ -10,7 +10,7 @@ let students = []; // 所有学生列表
 // 加载班级列表
 async function loadClasses() {
     try {
-        const response = await fetch('/api/classes');
+        const response = await fetch('/api/v1/classes');
         const data = await response.json();
         
         if (data.success) {
@@ -109,7 +109,7 @@ async function saveEditClass() {
     }
     
     try {
-        const response = await fetch(`/api/classes/${classId}`, {
+        const response = await fetch(`/api/v1/classes/${classId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, description })
@@ -140,7 +140,7 @@ async function deleteClass(classId) {
     }
     
     try {
-        const response = await fetch(`/api/classes/${classId}`, {
+        const response = await fetch(`/api/v1/classes/${classId}`, {
             method: 'DELETE'
         });
         
@@ -176,7 +176,7 @@ async function createClass() {
     }
     
     try {
-        const response = await fetch('/api/classes', {
+        const response = await fetch('/api/v1/classes', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, description })
