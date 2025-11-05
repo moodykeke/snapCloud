@@ -25,18 +25,19 @@ local locale = {
     -- Top navigation bar
     -- ==================
     -- Buttons
-    run_snap = "运行Snap@1", -- @1 becomes an italic exclamation mark (!)
-    explore = "其他人的作品",
+    run_snap = "运行 Snap@1", -- @1 becomes an italic exclamation mark (!)
+    explore = "浏览作品",
     forum = "论坛",
     join = "注册",
     login = "登录",
     -- User menu
     my_projects = "我的作品",
     my_collections = "我的作品集",
-    my_public_page = "我的展示页",
+    my_public_page = "我的展示",
     my_profile = "我的个人主页",
     administration = "管理",
     logout = "退出登录",
+    Learn = "学习",
     -- This option lets admins go back to their admin account when they're
     -- impersonating another user:
     unbecome = "",
@@ -57,7 +58,7 @@ local locale = {
     partners = "合作伙伴",
     source = "源代码",
     events = "",
-    examples = "",
+    examples = "示例",
     manual = "参考手册",
     materials = "素材",
     bjc = "BJC课程",
@@ -78,7 +79,7 @@ local locale = {
     welcome_logged_in = "", -- @1 becomes the current user username
     snap_description = "Snap@1是一种对儿童和成人具有广泛吸引力的编程语言，同时也是重要的计算机科学学习平台",
     -- Buttons
-    run_now = "",
+    run_now = "立即运行",
     -- examples and manual already translated in Footer
     -- Curated Collections
     featured = "精选项目",
