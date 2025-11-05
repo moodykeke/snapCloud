@@ -14,6 +14,7 @@
 -- translation if your language requires so.
 
 local locale = {
+
     -- Meta data
     -- =========
     lang_name = "Italiano",
@@ -360,7 +361,47 @@ local locale = {
     err_password_mismatch = "", -- @1 becomes a new line. Feel free to move it around to where it best fits your locale. You can also add additional new lines by inserting a new @1 where needed.
     err_password_mismatch_title = "",
     err_email_mismatch = "", -- @1 becomes a new line. Feel free to move it around to where it best fits your locale. You can also add additional new lines by inserting a new @1 where needed.
-    err_email_mismatch_title = "Le email non corrispondono",
+    err_email_mismatch_title = "Le email non corrispondono",,
+
+    -- Auto-generated
+    partials_alt_snap_wide_walls = "Snap! - Wide Walls",
+    users_placeholder_password = "password",
+    partials_alt_snap_low_floor_showing_flowers = "Snap! - Low Floor (showing flowers)",
+    static_alt_citilab_logo = "CitiLab Logo",
+    static_alt_faber_residency_logo = "Faber Residency Logo",
+    static_alt_sap_logo = "SAP Logo",
+    static_alt_a_snap_list_contains_blocks_including_vee = "A Snap! list contains blocks (including vee)",
+    static_alt_beetle_blocks_logo = "Beetle Blocks logo",
+    static_alt_nsf_logo = "NSF Logo",
+    static_title_snap_source_code = "Snap! Source Code",
+    static_alt_edc_logo = "EDC Logo",
+    static_alt_snap4arduino_logo = "Snap4Arduino Logo",
+    partials_alt_collection_thumbnail = "collection thumbnail",
+    partials_alt_snap_no_ceiling = "Snap! - No Ceiling",
+    admin_title_front_page = "Front Page",
+    static_alt_implementation_of_the_for_block_in_snap = "implementation of the for block in Snap!",
+    static_alt_snap = "Snap!",
+    static_alt_microsoft_teals_logo = "Microsoft TEALS logo",
+    partials_title_this_item_is_itempublished_and = "This item is <%= item.published and",
+    partials_placeholder_search = "Cerca",
+    embed_title_see_source_code = "See source code",
+    partials_title_this_item_itemshared_and = "This item <%= item.shared and",
+    layout_alt_uc_berkeley_logo = "UC Berkeley Logo",
+    admin_title_events = "Events",
+    static_alt_miosoft_logo = "Miosoft Logo",
+    index_alt_snap = "Snap!",
+    layout_placeholder_search = "Cerca",
+    static_alt_turtlestitch_logo = "TurtleStitch Logo",
+    static_alt_microblocks_logo = "microblocks logo",
+    admin_title_examples = "Examples",
+    partials_alt_view_topic_of_the_month = "View Topic of the Month",
+    static_alt_bjc_logo = "BJC Logo",
+    partials_placeholder_username = "nome utente",
+    static_title_snap_online = "Snap! online",
+    sessions_placeholder_email_address = "Email address",
+    partials_alt_snap_build_your_own_blocks = "Snap! - Build Your Own Blocks",
+    project_title_project_viewer = "project viewer",
+    layout_alt_sap_logo = "SAP Logo",
 }
 
 return locale
