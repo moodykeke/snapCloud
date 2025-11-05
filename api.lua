@@ -129,6 +129,19 @@ app:match(api_route('change_my_password'), respond_to({
     POST = UserController.change_password
 }))
 
+-- Update nickname
+app:post(api_route('users/current/nickname'), capture_errors(function (self)
+    assert_exists(self.current_user)
+    
+    local nickname = self.params.nickname
+    if nickname and nickname ~= '' then
+        self.current_user:update({ nickname = nickname })
+        return jsonResponse({ success = true, nickname = nickname })
+    else
+        return jsonResponse({ success = false, error = '昵称不能为空' })
+    end
+end))
+
 app:match(api_route('users/:username/newpassword'), respond_to({
     POST = capture_errors(function (self)
         self.params.old_password = self.params.oldpassword

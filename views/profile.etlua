@@ -8,6 +8,13 @@
             <span class="created"><%= string.from_sql_date(user.created) %></span>
         </div>
         <div class="mb-2">
+            <strong>昵称: </strong>
+            <span id="nickname-display"><%= user.nickname or '未设置' %></span>
+            <button class="btn btn-sm btn-outline-primary ms-2" onclick="editNickname()">
+                <i class="fas fa-edit"></i> 编辑
+            </button>
+        </div>
+        <div class="mb-2">
             <strong><%- locale.get('email') %> </strong>
             <span class="email">
                 <a href="mailto:<%= user.email %>" target="_blank"><%= user.email %></a>
@@ -48,6 +55,46 @@
 <% end %>
 
 <script>
+    function editNickname() {
+        const currentNickname = '<%= user.nickname or "" %>';
+        prompt(
+            '请输入您的昵称（方便教师识别）',
+            (newNickname) => {
+                if (newNickname !== null && newNickname.trim() !== '') {
+                    saveNickname(newNickname.trim());
+                }
+            }
+        );
+        // 设置输入框的默认值
+        setTimeout(() => {
+            const input = document.querySelector('#customconfirm input, #customalert input');
+            if (input) {
+                input.value = currentNickname;
+            }
+        }, 100);
+    }
+    
+    async function saveNickname(nickname) {
+        try {
+            const response = await fetch('/api/v1/users/current/nickname', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nickname: nickname })
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                document.getElementById('nickname-display').textContent = nickname;
+                alert('昵称已更新');
+            } else {
+                alert('更新失败: ' + (data.error || '未知错误'));
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('更新失败: ' + error.message);
+        }
+    }
+    
     function confirmDeleteMyself () {
         confirm(
             '<%= locale.get('confirm_delete_usr', user.username) %><br>' +

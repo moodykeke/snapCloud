@@ -22,7 +22,7 @@ local Assignments = Model:extend('assignments', {
     -- 查找教师的所有作业
     find_by_teacher = function(self, teacher_id, options)
         options = options or {}
-        local where_clause = 'teacher_id = ? AND deleted = false'
+        local where_clause = 'WHERE teacher_id = ? AND deleted = false'
         local params = {teacher_id}
         
         -- 可选筛选已发布/未发布
@@ -43,7 +43,7 @@ local Assignments = Model:extend('assignments', {
     -- 查找班级的所有作业
     find_by_collection = function(self, collection_id, options)
         options = options or {}
-        local where_clause = 'collection_id = ? AND deleted = false'
+        local where_clause = 'WHERE collection_id = ? AND deleted = false'
         
         if options.published then
             where_clause = where_clause .. ' AND published = true'
@@ -104,7 +104,7 @@ local Assignments = Model:extend('assignments', {
     -- 获取已发布的作业（学生可见）
     find_published = function(self, options)
         options = options or {}
-        local where_clause = 'published = true AND deleted = false'
+        local where_clause = 'WHERE published = true AND deleted = false'
         
         -- 可选筛选班级
         if options.collection_id then
