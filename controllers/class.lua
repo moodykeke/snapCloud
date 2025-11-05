@@ -11,6 +11,13 @@ local Users = package.loaded.Users
 local Collections = package.loaded.Collections
 local ClassMemberships = package.loaded.ClassMemberships
 
+-- 辅助函数：通过 ID 查找班级
+-- Collections 的主键是 (creator_id, name)，不是 id
+-- 所以需要显式指定 id 字段来查询
+local function find_class_by_id(class_id)
+    return Collections:select('WHERE id = ? AND is_class = true LIMIT 1', tonumber(class_id))[1]
+end
+
 ClassController = {
     -- 创建班级
     create_class = capture_errors(function (self)
@@ -90,8 +97,8 @@ ClassController = {
             yield_error('请先登录')
         end
         
-        local class = Collections:find(self.params.id)
-        if not class or not class.is_class then
+        local class = find_class_by_id(self.params.id)
+        if not class then
             yield_error('班级不存在')
         end
         
@@ -115,8 +122,8 @@ ClassController = {
             yield_error('请先登录')
         end
         
-        local class = Collections:find(self.params.id)
-        if not class or not class.is_class then
+        local class = find_class_by_id(self.params.id)
+        if not class then
             yield_error('班级不存在')
         end
         
@@ -140,14 +147,14 @@ ClassController = {
         return jsonResponse({ success = true, class = class })
     end),
     
-    -- 删除班级（软删除）
+    -- 删除班级
     delete_class = capture_errors(function (self)
         if not self.current_user then
             yield_error('请先登录')
         end
         
-        local class = Collections:find(self.params.id)
-        if not class or not class.is_class then
+        local class = find_class_by_id(self.params.id)
+        if not class then
             yield_error('班级不存在')
         end
         
@@ -182,8 +189,8 @@ ClassController = {
             yield_error('请先登录')
         end
         
-        local class = Collections:find(self.params.id)
-        if not class or not class.is_class then
+        local class = find_class_by_id(self.params.id)
+        if not class then
             yield_error('班级不存在')
         end
         
@@ -207,8 +214,8 @@ ClassController = {
             yield_error('请先登录')
         end
         
-        local class = Collections:find(self.params.id)
-        if not class or not class.is_class then
+        local class = find_class_by_id(self.params.id)
+        if not class then
             yield_error('班级不存在')
         end
         
@@ -240,14 +247,14 @@ ClassController = {
         return jsonResponse({ success = true, membership = membership })
     end),
     
-    -- 批量添加学生
-    batch_add_members = capture_errors(function (self)
+    -- 批量添加学生到班级
+    batch_add_class_members = capture_errors(function (self)
         if not self.current_user then
             yield_error('请先登录')
         end
         
-        local class = Collections:find(self.params.id)
-        if not class or not class.is_class then
+        local class = find_class_by_id(self.params.id)
+        if not class then
             yield_error('班级不存在')
         end
         
@@ -272,8 +279,8 @@ ClassController = {
             yield_error('请先登录')
         end
         
-        local class = Collections:find(self.params.id)
-        if not class or not class.is_class then
+        local class = find_class_by_id(self.params.id)
+        if not class then
             yield_error('班级不存在')
         end
         
@@ -301,8 +308,8 @@ ClassController = {
             yield_error('请先登录')
         end
         
-        local class = Collections:find(self.params.id)
-        if not class or not class.is_class then
+        local class = find_class_by_id(self.params.id)
+        if not class then
             yield_error('班级不存在')
         end
         
