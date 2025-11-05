@@ -33,15 +33,19 @@ async function loadMembers() {
         const response = await fetch(`/api/v1/classes/${classId}/members`);
         const data = await response.json();
         
-        if (data.success) {
+        console.log('Members API response:', data);
+        
+        if (data.success && Array.isArray(data.members)) {
             members = data.members;
             renderMembers();
+        } else if (data.errors) {
+            showError(data.errors[0] || '加载成员列表失败');
         } else {
             showError('加载成员列表失败');
         }
     } catch (error) {
         console.error('Error:', error);
-        showError('加载成员列表失败');
+        showError('加载成员列表失败: ' + error.message);
     }
 }
 

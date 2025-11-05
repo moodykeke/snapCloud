@@ -205,6 +205,11 @@ ClassController = {
             ORDER BY student_username
         ]], class.id)
         
+        -- 确保空数组正确序列化为 JSON 数组而不是对象
+        if #members == 0 then
+            members = cjson.empty_array
+        end
+        
         return jsonResponse({ success = true, members = members })
     end),
     
