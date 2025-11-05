@@ -5,7 +5,6 @@
 local db = package.loaded.db
 local yield_error = package.loaded.yield_error
 local capture_errors = package.loaded.capture_errors
-local jsonResponse = package.loaded.jsonResponse
 
 local Users = package.loaded.Users
 local Collections = package.loaded.Collections
