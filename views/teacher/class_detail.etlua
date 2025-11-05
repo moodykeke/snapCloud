@@ -1,0 +1,358 @@
+<% render("layout", { page_title = loc("class_details") }) %>
+
+<script>
+const classId = parseInt(window.location.pathname.split('/').pop());
+let classData = null;
+let members = [];
+let allStudents = []; // 所有可添加的学生
+
+// 加载班级详情
+async function loadClassDetails() {
+    try {
+        const response = await fetch(`/api/classes/${classId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            classData = data.class;
+            renderClassInfo();
+        } else {
+            showError('加载班级信息失败');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('加载班级信息失败');
+    }
+}
+
+// 加载成员列表
+async function loadMembers() {
+    try {
+        const response = await fetch(`/api/classes/${classId}/members`);
+        const data = await response.json();
+        
+        if (data.success) {
+            members = data.members;
+            renderMembers();
+        } else {
+            showError('加载成员列表失败');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('加载成员列表失败');
+    }
+}
+
+// 渲染班级信息
+function renderClassInfo() {
+    if (!classData) return;
+    
+    document.getElementById('className').textContent = classData.name;
+    document.getElementById('classDescription').textContent = classData.description || '<%= loc("no_description") %>';
+    
+    if (classData.stats) {
+        document.getElementById('studentCount').textContent = classData.stats.active_student_count || 0;
+        document.getElementById('assignmentCount').textContent = classData.stats.published_assignment_count || 0;
+    }
+}
+
+// 渲染成员列表
+function renderMembers() {
+    const container = document.getElementById('membersList');
+    
+    if (members.length === 0) {
+        container.innerHTML = `
+            <div class="alert alert-info">
+                <%= loc('no_students_in_class') %>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = `
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th><%= loc('student_username') %></th>
+                    <th><%= loc('student_email') %></th>
+                    <th><%= loc('joined_at') %></th>
+                    <th><%= loc('submitted_assignments') %></th>
+                    <th><%= loc('average_points') %></th>
+                    <th><%= loc('status') %></th>
+                    <th><%= loc('actions') %></th>
+                </tr>
+            </thead>
+            <tbody>
+                ${members.map(member => `
+                    <tr class="${!member.is_active ? 'table-secondary' : ''}">
+                        <td>${escapeHtml(member.student_username)}</td>
+                        <td>${escapeHtml(member.student_email || '')}</td>
+                        <td>${formatDate(member.joined_at)}</td>
+                        <td>${member.submitted_assignment_count || 0}</td>
+                        <td>${member.average_points ? member.average_points.toFixed(1) : '-'}</td>
+                        <td>
+                            ${member.is_active 
+                                ? '<span class="badge bg-success"><%= loc("active") %></span>'
+                                : '<span class="badge bg-secondary"><%= loc("inactive") %></span>'}
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-secondary" 
+                                    onclick="toggleMemberActive(${member.student_id})">
+                                <i class="fas fa-toggle-${member.is_active ? 'on' : 'off'}"></i>
+                                ${member.is_active ? '<%= loc("deactivate") %>' : '<%= loc("activate") %>'}
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" 
+                                    onclick="removeMember(${member.student_id}, '${escapeHtml(member.student_username)}')">
+                                <i class="fas fa-times"></i> <%= loc('remove') %>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+// 显示添加学生对话框
+async function showAddStudentDialog() {
+    // 加载教师创建的所有学生
+    try {
+        const response = await fetch('/api/learners'); // 需要实现这个 API
+        const data = await response.json();
+        
+        if (data.users) {
+            allStudents = data.users;
+            renderStudentSelector();
+            const modal = new bootstrap.Modal(document.getElementById('addStudentModal'));
+            modal.show();
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('加载学生列表失败');
+    }
+}
+
+// 渲染学生选择器
+function renderStudentSelector() {
+    const select = document.getElementById('studentSelector');
+    const memberIds = new Set(members.map(m => m.student_id));
+    
+    const availableStudents = allStudents.filter(s => !memberIds.has(s.id));
+    
+    if (availableStudents.length === 0) {
+        select.innerHTML = '<option value="">没有可添加的学生</option>';
+        return;
+    }
+    
+    select.innerHTML = '<option value="">选择学生...</option>' +
+        availableStudents.map(s => 
+            `<option value="${s.id}">${escapeHtml(s.username)} (${escapeHtml(s.email || '')})</option>`
+        ).join('');
+}
+
+// 添加学生
+async function addStudent() {
+    const studentId = document.getElementById('studentSelector').value;
+    const studentNote = document.getElementById('studentNote').value.trim();
+    
+    if (!studentId) {
+        showError('<%= loc("please_select_student") %>');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/classes/${classId}/members`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ student_id: parseInt(studentId), student_note: studentNote })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('<%= loc("student_added") %>');
+            bootstrap.Modal.getInstance(document.getElementById('addStudentModal')).hide();
+            loadMembers();
+            loadClassDetails(); // 更新统计
+        } else {
+            showError(data.error || '<%= loc("error_add_student") %>');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('<%= loc("error_add_student") %>');
+    }
+}
+
+// 切换学生激活状态
+async function toggleMemberActive(studentId) {
+    try {
+        const response = await fetch(`/api/classes/${classId}/members/${studentId}/toggle`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('<%= loc("status_updated") %>');
+            loadMembers();
+        } else {
+            showError(data.error || '<%= loc("error_update_status") %>');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('<%= loc("error_update_status") %>');
+    }
+}
+
+// 移除学生
+async function removeMember(studentId, username) {
+    if (!confirm(`<%= loc("confirm_remove_student") %>`.replace('@1', username))) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/classes/${classId}/members/${studentId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('<%= loc("student_removed") %>');
+            loadMembers();
+            loadClassDetails(); // 更新统计
+        } else {
+            showError(data.error || '<%= loc("error_remove_student") %>');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('<%= loc("error_remove_student") %>');
+    }
+}
+
+// 工具函数
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('zh-CN');
+}
+
+function showSuccess(message) {
+    alert(message);
+}
+
+function showError(message) {
+    alert(message);
+}
+
+// 页面加载时初始化
+document.addEventListener('DOMContentLoaded', function() {
+    loadClassDetails();
+    loadMembers();
+});
+</script>
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/teacher/classes"><%= loc('teacher_classes') %></a></li>
+                    <li class="breadcrumb-item active" id="className">...</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <!-- 班级信息卡片 -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title" id="className">...</h2>
+            <p class="card-text" id="classDescription">...</p>
+            <div class="row mt-3">
+                <div class="col-md-4">
+                    <div class="stat-box">
+                        <h3 id="studentCount">0</h3>
+                        <p class="text-muted"><%= loc('students') %></p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-box">
+                        <h3 id="assignmentCount">0</h3>
+                        <p class="text-muted"><%= loc('assignments') %></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 成员列表 -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><%= loc('class_members') %></h5>
+            <button class="btn btn-primary btn-sm" onclick="showAddStudentDialog()">
+                <i class="fas fa-user-plus"></i> <%= loc('add_student') %>
+            </button>
+        </div>
+        <div class="card-body">
+            <div id="membersList">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加学生对话框 -->
+<div class="modal fade" id="addStudentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><%= loc('add_student') %></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addStudentForm">
+                    <div class="mb-3">
+                        <label for="studentSelector" class="form-label"><%= loc('select_student') %></label>
+                        <select class="form-select" id="studentSelector" required>
+                            <option value="">加载中...</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="studentNote" class="form-label"><%= loc('class_student_note') %> (<%= loc('optional') %>)</label>
+                        <input type="text" class="form-control" id="studentNote" 
+                               placeholder="<%= loc('class_student_note_placeholder') %>">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= loc('cancel') %></button>
+                <button type="button" class="btn btn-primary" onclick="addStudent()"><%= loc('add') %></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.stat-box {
+    text-align: center;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+.stat-box h3 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #007bff;
+    margin-bottom: 5px;
+}
+</style>

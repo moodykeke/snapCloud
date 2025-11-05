@@ -36,6 +36,7 @@ require 'controllers.project'
 require 'controllers.collection'
 require 'controllers.site'
 require 'controllers.assignment'
+require 'controllers.class'
 
 -- All API routes are nested under /api/v1,
 -- which is currently an optional prefix.
@@ -436,3 +437,39 @@ app:match(api_route('my/stats'), respond_to({
     GET = AssignmentController.get_my_stats
 }))
 
+-- Classes (班级管理)
+-- ==================
+
+-- Teacher APIs
+app:match(api_route('classes'), respond_to({
+    GET = ClassController.list_classes,
+    POST = json_params(ClassController.create_class)
+}))
+
+app:match(api_route('classes/:id'), respond_to({
+    GET = ClassController.get_class,
+    PUT = json_params(ClassController.update_class),
+    DELETE = ClassController.delete_class
+}))
+
+app:match(api_route('classes/:id/members'), respond_to({
+    GET = ClassController.list_class_members,
+    POST = json_params(ClassController.add_class_member)
+}))
+
+app:match(api_route('classes/:id/members/batch'), respond_to({
+    POST = json_params(ClassController.batch_add_members)
+}))
+
+app:match(api_route('classes/:id/members/:student_id'), respond_to({
+    DELETE = ClassController.remove_class_member
+}))
+
+app:match(api_route('classes/:id/members/:student_id/toggle'), respond_to({
+    POST = ClassController.toggle_member_active
+}))
+
+-- Student APIs
+app:match(api_route('student/classes'), respond_to({
+    GET = ClassController.student_classes
+}))

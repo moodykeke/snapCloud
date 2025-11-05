@@ -571,6 +571,74 @@ local locale = {
     bulk_tile = "批量创建用户",
     learners_title = "学生管理",
     assignments_title = "作业管理",
+    classes_title = "班级管理",
+    
+    -- Class Management (班级管理)
+    -- ============================
+    
+    -- Common
+    classes = "班级",
+    class = "班级",
+    class_name = "班级名称",
+    class_description = "班级描述",
+    class_members = "班级成员",
+    teacher_classes = "我的班级",
+    create_class = "创建班级",
+    edit_class = "编辑班级",
+    delete_class = "删除班级",
+    class_details = "班级详情",
+    no_classes = "还没有创建任何班级",
+    create_first_class = "创建第一个班级",
+    manage_your_classes = "管理您的所有班级",
+    no_description = "暂无描述",
+    
+    -- Students in Class
+    add_student = "添加学生",
+    remove_student = "移除学生",
+    student_username = "学生用户名",
+    student_email = "学生邮箱",
+    joined_at = "加入时间",
+    submitted_assignments = "已提交作业数",
+    class_student_note = "学生备注",
+    class_student_note_placeholder = "如：学号、座位号等",
+    no_students_in_class = "班级中还没有学生",
+    select_student = "选择学生",
+    please_select_student = "请选择一个学生",
+    
+    -- Status
+    active = "激活",
+    inactive = "停用",
+    activate = "激活",
+    deactivate = "停用",
+    
+    -- Actions
+    view_details = "查看详情",
+    add = "添加",
+    remove = "移除",
+    save = "保存",
+    create = "创建",
+    optional = "可选",
+    
+    -- Messages
+    class_created = "班级创建成功！",
+    class_updated = "班级更新成功！",
+    class_deleted = "班级已删除",
+    student_added = "学生添加成功！",
+    student_removed = "学生已移除",
+    status_updated = "状态更新成功",
+    class_name_required = "班级名称不能为空",
+    
+    -- Errors
+    error_create_class = "创建班级失败",
+    error_update_class = "更新班级失败",
+    error_delete_class = "删除班级失败",
+    error_add_student = "添加学生失败",
+    error_remove_student = "移除学生失败",
+    error_update_status = "更新状态失败",
+    
+    -- Confirmations
+    confirm_delete_class = "确认删除班级 @1？",
+    confirm_remove_student = "确认从班级中移除学生 @1？",
     
     -- Bulk creation
     bulk_text = "上传 CSV 文件或粘贴 CSV 内容以批量创建学生账号。格式：用户名,密码",

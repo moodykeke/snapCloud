@@ -1,0 +1,463 @@
+-- Class Management Controller
+-- ===========================
+-- 班级管理控制器
+
+local app = require('app')
+local app_helpers = require('lapis.application')
+local respond_to = require('lapis.application').respond_to
+local db = require('lapis.db')
+local yield_error = app_helpers.yield_error
+
+local Users = package.loaded.Users
+local Collections = package.loaded.Collections
+local ClassMemberships = package.loaded.ClassMemberships
+
+-- ==================
+-- 教师端 API
+-- ==================
+
+-- 创建班级
+-- POST /api/classes
+app:match('create_class', '/api/classes', respond_to({
+    POST = function(self)
+        -- 权限检查
+        if not self.current_user then
+            yield_error('请先登录')
+        end
+        
+        if not self.current_user.is_teacher then
+            yield_error('只有教师可以创建班级')
+        end
+        
+        -- 验证参数
+        local name = self.params.name
+        local description = self.params.description or ''
+        
+        if not name or name == '' then
+            yield_error('班级名称不能为空')
+        end
+        
+        -- 检查是否已存在同名班级
+        local existing = Collections:find({
+            creator_id = self.current_user.id,
+            name = name
+        })
+        
+        if existing then
+            yield_error('已存在同名的班级或作品集')
+        end
+        
+        -- 创建班级（实际是创建 Collection）
+        local class = Collections:create({
+            name = name,
+            description = description,
+            creator_id = self.current_user.id,
+            is_class = true,
+            created_at = db.raw("now()"),
+            updated_at = db.raw("now()")
+        })
+        
+        return {
+            json = {
+                success = true,
+                class = class
+            }
+        }
+    end
+}))
+
+-- 获取教师的所有班级
+-- GET /api/classes
+app:match('list_classes', '/api/classes', respond_to({
+    GET = function(self)
+        if not self.current_user then
+            yield_error('请先登录')
+        end
+        
+        if not self.current_user.is_teacher then
+            yield_error('只有教师可以查看班级')
+        end
+        
+        -- 查询教师创建的所有班级
+        local classes = Collections:select(
+            'WHERE creator_id = ? AND is_class = true ORDER BY created_at DESC',
+            self.current_user.id
+        )
+        
+        -- 获取每个班级的统计信息
+        for _, class in ipairs(classes) do
+            local stats = db.query([[
+                SELECT * FROM class_stats WHERE class_id = ?
+            ]], class.id)[1]
+            
+            class.stats = stats or {
+                active_student_count = 0,
+                total_student_count = 0,
+                published_assignment_count = 0,
+                total_assignment_count = 0
+            }
+        end
+        
+        return {
+            json = {
+                success = true,
+                classes = classes
+            }
+        }
+    end
+}))
+
+-- 获取班级详情
+-- GET /api/classes/:id
+app:match('get_class', '/api/classes/:id', respond_to({
+    GET = function(self)
+        if not self.current_user then
+            yield_error('请先登录')
+        end
+        
+        local class = Collections:find(self.params.id)
+        
+        if not class or not class.is_class then
+            yield_error('班级不存在')
+        end
+        
+        -- 权限检查：只有创建者可以查看
+        if class.creator_id ~= self.current_user.id then
+            yield_error('无权查看此班级')
+        end
+        
+        -- 获取统计信息
+        local stats = db.query([[
+            SELECT * FROM class_stats WHERE class_id = ?
+        ]], class.id)[1]
+        
+        class.stats = stats
+        
+        return {
+            json = {
+                success = true,
+                class = class
+            }
+        }
+    end
+}))
+
+-- 更新班级信息
+-- PUT /api/classes/:id
+app:match('update_class', '/api/classes/:id', respond_to({
+    PUT = function(self)
+        if not self.current_user then
+            yield_error('请先登录')
+        end
+        
+        local class = Collections:find(self.params.id)
+        
+        if not class or not class.is_class then
+            yield_error('班级不存在')
+        end
+        
+        if class.creator_id ~= self.current_user.id then
+            yield_error('无权修改此班级')
+        end
+        
+        -- 更新信息
+        local updates = {}
+        
+        if self.params.name then
+            updates.name = self.params.name
+        end
+        
+        if self.params.description ~= nil then
+            updates.description = self.params.description
+        end
+        
+        updates.updated_at = db.raw("now()")
+        
+        class:update(updates)
+        
+        return {
+            json = {
+                success = true,
+                class = class
+            }
+        }
+    end
+}))
+
+-- 删除班级
+-- DELETE /api/classes/:id
+app:match('delete_class', '/api/classes/:id', respond_to({
+    DELETE = function(self)
+        if not self.current_user then
+            yield_error('请先登录')
+        end
+        
+        local class = Collections:find(self.params.id)
+        
+        if not class or not class.is_class then
+            yield_error('班级不存在')
+        end
+        
+        if class.creator_id ~= self.current_user.id then
+            yield_error('无权删除此班级')
+        end
+        
+        -- 检查是否有作业
+        local Assignments = package.loaded.Assignments
+        local assignments_count = Assignments:count('collection_id = ? AND deleted = false', class.id)
+        
+        if assignments_count > 0 then
+            yield_error('该班级还有作业，无法删除')
+        end
+        
+        -- 删除所有成员关系
+        db.query([[
+            UPDATE class_memberships 
+            SET deleted_at = now() 
+            WHERE class_id = ? AND deleted_at IS NULL
+        ]], class.id)
+        
+        -- 删除班级（实际删除 Collection）
+        class:delete()
+        
+        return {
+            json = {
+                success = true
+            }
+        }
+    end
+}))
+
+-- 获取班级成员列表
+-- GET /api/classes/:id/members
+app:match('list_class_members', '/api/classes/:id/members', respond_to({
+    GET = function(self)
+        if not self.current_user then
+            yield_error('请先登录')
+        end
+        
+        local class = Collections:find(self.params.id)
+        
+        if not class or not class.is_class then
+            yield_error('班级不存在')
+        end
+        
+        if class.creator_id ~= self.current_user.id then
+            yield_error('无权查看此班级成员')
+        end
+        
+        -- 获取成员详情（含作业统计）
+        local members = db.query([[
+            SELECT * FROM class_members_detail
+            WHERE class_id = ?
+            ORDER BY student_username
+        ]], class.id)
+        
+        return {
+            json = {
+                success = true,
+                members = members
+            }
+        }
+    end
+}))
+
+-- 添加学生到班级
+-- POST /api/classes/:id/members
+app:match('add_class_member', '/api/classes/:id/members', respond_to({
+    POST = function(self)
+        if not self.current_user then
+            yield_error('请先登录')
+        end
+        
+        local class = Collections:find(self.params.id)
+        
+        if not class or not class.is_class then
+            yield_error('班级不存在')
+        end
+        
+        if class.creator_id ~= self.current_user.id then
+            yield_error('无权添加成员')
+        end
+        
+        local student_id = tonumber(self.params.student_id)
+        
+        if not student_id then
+            yield_error('请提供有效的学生ID')
+        end
+        
+        -- 检查学生是否存在
+        local student = Users:find(student_id)
+        
+        if not student then
+            yield_error('学生不存在')
+        end
+        
+        -- 添加学生
+        local membership, err = ClassMemberships:add_student(
+            class.id,
+            student_id,
+            { student_note = self.params.student_note }
+        )
+        
+        if err == 'already_exists' then
+            return {
+                json = {
+                    success = true,
+                    already_exists = true,
+                    membership = membership
+                }
+            }
+        end
+        
+        return {
+            json = {
+                success = true,
+                membership = membership
+            }
+        }
+    end
+}))
+
+-- 批量添加学生
+-- POST /api/classes/:id/members/batch
+app:match('batch_add_members', '/api/classes/:id/members/batch', respond_to({
+    POST = function(self)
+        if not self.current_user then
+            yield_error('请先登录')
+        end
+        
+        local class = Collections:find(self.params.id)
+        
+        if not class or not class.is_class then
+            yield_error('班级不存在')
+        end
+        
+        if class.creator_id ~= self.current_user.id then
+            yield_error('无权添加成员')
+        end
+        
+        local student_ids = self.params.student_ids
+        
+        if not student_ids or type(student_ids) ~= 'table' then
+            yield_error('请提供学生ID列表')
+        end
+        
+        -- 批量添加
+        local results = ClassMemberships:add_students(class.id, student_ids)
+        
+        return {
+            json = {
+                success = true,
+                results = results
+            }
+        }
+    end
+}))
+
+-- 移除班级成员
+-- DELETE /api/classes/:id/members/:student_id
+app:match('remove_class_member', '/api/classes/:id/members/:student_id', respond_to({
+    DELETE = function(self)
+        if not self.current_user then
+            yield_error('请先登录')
+        end
+        
+        local class = Collections:find(self.params.id)
+        
+        if not class or not class.is_class then
+            yield_error('班级不存在')
+        end
+        
+        if class.creator_id ~= self.current_user.id then
+            yield_error('无权移除成员')
+        end
+        
+        local student_id = tonumber(self.params.student_id)
+        
+        if not student_id then
+            yield_error('请提供有效的学生ID')
+        end
+        
+        -- 移除学生
+        local success = ClassMemberships:remove_student(class.id, student_id)
+        
+        if not success then
+            yield_error('学生不在班级中')
+        end
+        
+        return {
+            json = {
+                success = true
+            }
+        }
+    end
+}))
+
+-- 切换学生激活状态
+-- POST /api/classes/:id/members/:student_id/toggle
+app:match('toggle_member_active', '/api/classes/:id/members/:student_id/toggle', respond_to({
+    POST = function(self)
+        if not self.current_user then
+            yield_error('请先登录')
+        end
+        
+        local class = Collections:find(self.params.id)
+        
+        if not class or not class.is_class then
+            yield_error('班级不存在')
+        end
+        
+        if class.creator_id ~= self.current_user.id then
+            yield_error('无权修改成员状态')
+        end
+        
+        local student_id = tonumber(self.params.student_id)
+        
+        if not student_id then
+            yield_error('请提供有效的学生ID')
+        end
+        
+        -- 切换状态
+        local membership = ClassMemberships:toggle_active(class.id, student_id)
+        
+        if not membership then
+            yield_error('学生不在班级中')
+        end
+        
+        return {
+            json = {
+                success = true,
+                is_active = membership.is_active
+            }
+        }
+    end
+}))
+
+-- ==================
+-- 学生端 API
+-- ==================
+
+-- 获取学生的班级列表
+-- GET /api/student/classes
+app:match('student_classes', '/api/student/classes', respond_to({
+    GET = function(self)
+        if not self.current_user then
+            yield_error('请先登录')
+        end
+        
+        -- 获取学生的班级列表
+        local classes = db.query([[
+            SELECT * FROM student_classes
+            WHERE student_id = ?
+            ORDER BY class_name
+        ]], self.current_user.id)
+        
+        return {
+            json = {
+                success = true,
+                classes = classes
+            }
+        }
+    end
+}))

@@ -1,0 +1,302 @@
+<% render("layout", { page_title = loc("teacher_classes") }) %>
+
+<script>
+let classes = [];
+let students = []; // 所有学生列表
+
+// 加载班级列表
+async function loadClasses() {
+    try {
+        const response = await fetch('/api/classes');
+        const data = await response.json();
+        
+        if (data.success) {
+            classes = data.classes;
+            renderClasses();
+        } else {
+            showError('加载班级失败');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('加载班级失败');
+    }
+}
+
+// 渲染班级列表
+function renderClasses() {
+    const container = document.getElementById('classesList');
+    
+    if (classes.length === 0) {
+        container.innerHTML = `
+            <div class="alert alert-info">
+                <%= loc('no_classes') %>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = classes.map(cls => `
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h5 class="card-title mb-2">
+                            <i class="fas fa-users"></i> ${escapeHtml(cls.name)}
+                        </h5>
+                        <p class="card-text text-muted mb-0">
+                            ${escapeHtml(cls.description || '')}
+                        </p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="stats">
+                            <div class="stat-item">
+                                <strong>${cls.stats.active_student_count || 0}</strong>
+                                <small class="text-muted d-block"><%= loc('students') %></small>
+                            </div>
+                            <div class="stat-item mt-2">
+                                <strong>${cls.stats.published_assignment_count || 0}</strong>
+                                <small class="text-muted d-block"><%= loc('assignments') %></small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-end">
+                        <button class="btn btn-sm btn-primary" onclick="viewClass(${cls.id})">
+                            <i class="fas fa-eye"></i> <%= loc('view_details') %>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="editClass(${cls.id})">
+                            <i class="fas fa-edit"></i> <%= loc('edit') %>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteClass(${cls.id})">
+                            <i class="fas fa-trash"></i> <%= loc('delete_button') %>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// 查看班级详情
+function viewClass(classId) {
+    window.location.href = `/teacher/class/${classId}`;
+}
+
+// 编辑班级
+async function editClass(classId) {
+    const cls = classes.find(c => c.id === classId);
+    if (!cls) return;
+    
+    document.getElementById('editClassId').value = cls.id;
+    document.getElementById('editClassName').value = cls.name;
+    document.getElementById('editClassDescription').value = cls.description || '';
+    
+    const modal = new bootstrap.Modal(document.getElementById('editClassModal'));
+    modal.show();
+}
+
+// 保存编辑
+async function saveEditClass() {
+    const classId = document.getElementById('editClassId').value;
+    const name = document.getElementById('editClassName').value.trim();
+    const description = document.getElementById('editClassDescription').value.trim();
+    
+    if (!name) {
+        showError('<%= loc("class_name_required") %>');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/classes/${classId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, description })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('<%= loc("class_updated") %>');
+            bootstrap.Modal.getInstance(document.getElementById('editClassModal')).hide();
+            loadClasses();
+        } else {
+            showError(data.error || '<%= loc("error_update_class") %>');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('<%= loc("error_update_class") %>');
+    }
+}
+
+// 删除班级
+async function deleteClass(classId) {
+    const cls = classes.find(c => c.id === classId);
+    if (!cls) return;
+    
+    if (!confirm(`<%= loc("confirm_delete_class") %>`.replace('@1', cls.name))) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/classes/${classId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('<%= loc("class_deleted") %>');
+            loadClasses();
+        } else {
+            showError(data.error || '<%= loc("error_delete_class") %>');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('<%= loc("error_delete_class") %>');
+    }
+}
+
+// 显示创建班级对话框
+function showCreateClassDialog() {
+    document.getElementById('createClassForm').reset();
+    const modal = new bootstrap.Modal(document.getElementById('createClassModal'));
+    modal.show();
+}
+
+// 创建班级
+async function createClass() {
+    const name = document.getElementById('className').value.trim();
+    const description = document.getElementById('classDescription').value.trim();
+    
+    if (!name) {
+        showError('<%= loc("class_name_required") %>');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/classes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, description })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('<%= loc("class_created") %>');
+            bootstrap.Modal.getInstance(document.getElementById('createClassModal')).hide();
+            loadClasses();
+        } else {
+            showError(data.error || '<%= loc("error_create_class") %>');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('<%= loc("error_create_class") %>');
+    }
+}
+
+// 工具函数
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function showSuccess(message) {
+    alert(message); // 简单实现，可以改用 Bootstrap Toast
+}
+
+function showError(message) {
+    alert(message);
+}
+
+// 页面加载时初始化
+document.addEventListener('DOMContentLoaded', function() {
+    loadClasses();
+});
+</script>
+
+<style>
+.stats .stat-item {
+    display: inline-block;
+    margin: 0 10px;
+}
+</style>
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1><i class="fas fa-users"></i> <%= loc('teacher_classes') %></h1>
+            <p class="text-muted"><%= loc('manage_your_classes') %></p>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" onclick="showCreateClassDialog()">
+                <i class="fas fa-plus"></i> <%= loc('create_class') %>
+            </button>
+        </div>
+    </div>
+    
+    <div id="classesList">
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 创建班级对话框 -->
+<div class="modal fade" id="createClassModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><%= loc('create_class') %></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createClassForm">
+                    <div class="mb-3">
+                        <label for="className" class="form-label"><%= loc('class_name') %></label>
+                        <input type="text" class="form-control" id="className" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="classDescription" class="form-label"><%= loc('class_description') %></label>
+                        <textarea class="form-control" id="classDescription" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= loc('cancel') %></button>
+                <button type="button" class="btn btn-primary" onclick="createClass()"><%= loc('create') %></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑班级对话框 -->
+<div class="modal fade" id="editClassModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><%= loc('edit_class') %></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editClassForm">
+                    <input type="hidden" id="editClassId">
+                    <div class="mb-3">
+                        <label for="editClassName" class="form-label"><%= loc('class_name') %></label>
+                        <input type="text" class="form-control" id="editClassName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editClassDescription" class="form-label"><%= loc('class_description') %></label>
+                        <textarea class="form-control" id="editClassDescription" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= loc('cancel') %></button>
+                <button type="button" class="btn btn-primary" onclick="saveEditClass()"><%= loc('save') %></button>
+            </div>
+        </div>
+    </div>
+</div>

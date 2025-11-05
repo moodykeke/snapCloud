@@ -545,6 +545,23 @@ app:get('/teacher/grade/:submission_id', capture_errors(function (self)
     return { render = 'teacher/grade' }
 end))
 
+-- Teacher Class Management Pages
+app:get('/teacher/classes', capture_errors(function (self)
+    assert_exists(self.current_user)
+    if not self.current_user.is_teacher and not self.current_user:isadmin() then
+        yield_error('需要教师权限')
+    end
+    return { render = 'teacher/classes' }
+end))
+
+app:get('/teacher/class/:id', capture_errors(function (self)
+    assert_exists(self.current_user)
+    if not self.current_user.is_teacher and not self.current_user:isadmin() then
+        yield_error('需要教师权限')
+    end
+    return { render = 'teacher/class_detail' }
+end))
+
 -- Student pages  
 app:get('/student/assignments', capture_errors(function (self)
     assert_exists(self.current_user)
