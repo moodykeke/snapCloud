@@ -10,9 +10,13 @@
         <div class="mb-2">
             <strong>真实姓名: </strong>
             <span id="realname-display"><%= user.real_name or '未设置' %></span>
+            <% if user.is_teacher or user:isadmin() then %>
             <button class="btn btn-sm btn-outline-primary ms-2" onclick="editRealName()">
                 <i class="fas fa-edit"></i> 编辑
             </button>
+            <% else %>
+            <small class="text-muted">(仅教师可修改)</small>
+            <% end %>
         </div>
         <div class="mb-2">
             <strong>昵称: </strong>

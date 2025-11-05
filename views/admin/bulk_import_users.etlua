@@ -1,0 +1,404 @@
+<% render("views/partials/header", { page_title = "批量导入用户（管理员）" }) %>
+
+<div class="container mt-4">
+    <h2><i class="fas fa-users-cog"></i> 批量导入用户（管理员工具）</h2>
+    
+    <div class="alert alert-warning">
+        <h5><i class="fas fa-exclamation-triangle"></i> 管理员功能</h5>
+        <p>此功能仅限管理员使用，可批量创建用户并设置权限。</p>
+        <ul>
+            <li><strong>必填字段</strong>：用户名、密码</li>
+            <li><strong>可选字段</strong>：邮箱、昵称、真实姓名、角色</li>
+            <li><strong>支持角色</strong>：admin(管理员)、teacher(教师)、student(学生)、moderator(版主)、standard(标准用户)</li>
+            <li><strong>默认值</strong>：角色默认为student，昵称和真实姓名默认为用户名</li>
+        </ul>
+    </div>
+
+    <!-- CSV示例 -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-file-csv"></i> CSV格式示例</h5>
+        </div>
+        <div class="card-body">
+            <pre class="bg-light p-3 border rounded"><code>username,password,email,nickname,real_name,role
+teacher001,pass123,t001@school.com,张老师,张明,teacher
+student001,pass456,s001@school.com,小明,李明,student
+admin001,admin789,admin@school.com,系统管理员,王刚,admin
+moderator01,mod123,mod@school.com,版主,刘红,moderator</code></pre>
+            <p class="text-muted small">角色字段支持中英文：admin/管理员, teacher/教师, student/学生, moderator/版主, standard/标准</p>
+        </div>
+    </div>
+
+    <!-- 上传CSV -->
+    <div class="card mb-3">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="fas fa-upload"></i> 上传CSV文件或粘贴数据</h5>
+        </div>
+        <div class="card-body">
+            <!-- 文件上传 -->
+            <div class="mb-3">
+                <label for="csv_file" class="form-label"><strong>上传CSV文件</strong></label>
+                <input type="file" class="form-control" id="csv_file" accept=".csv,.txt">
+            </div>
+
+            <div class="text-center my-2">
+                <span class="badge bg-secondary">或</span>
+            </div>
+
+            <!-- 粘贴数据 -->
+            <div class="mb-3">
+                <label for="csv_text" class="form-label"><strong>粘贴CSV数据</strong></label>
+                <textarea id="csv_text" class="form-control" rows="10" placeholder="username,password,email,nickname,real_name,role&#10;teacher001,pass123,t001@school.com,张老师,张明,teacher&#10;student001,pass456,s001@school.com,小明,李明,student"></textarea>
+            </div>
+
+            <button type="button" class="btn btn-primary btn-lg" id="btn_parse_csv">
+                <i class="fas fa-search"></i> 预览数据
+            </button>
+        </div>
+    </div>
+
+    <!-- 预览数据 -->
+    <div class="card mb-3" id="preview_section" style="display: none;">
+        <div class="card-header bg-warning">
+            <h5 class="mb-0"><i class="fas fa-eye"></i> 预览并确认数据</h5>
+        </div>
+        <div class="card-body">
+            <div id="preview_stats" class="alert alert-light mb-3"></div>
+            
+            <!-- 角色统计 -->
+            <div id="role_stats" class="mb-3"></div>
+            
+            <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                <table class="table table-bordered table-hover table-sm">
+                    <thead class="table-dark sticky-top">
+                        <tr>
+                            <th>#</th>
+                            <th>用户名</th>
+                            <th>密码</th>
+                            <th>邮箱</th>
+                            <th>昵称</th>
+                            <th>真实姓名</th>
+                            <th>角色/权限</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody id="preview_tbody"></tbody>
+                </table>
+            </div>
+
+            <div class="mt-3">
+                <button type="button" class="btn btn-danger btn-lg" id="btn_import">
+                    <i class="fas fa-exclamation-triangle"></i> 确认导入（不可撤销）
+                </button>
+                <button type="button" class="btn btn-secondary" id="btn_cancel">
+                    <i class="fas fa-times"></i> 取消
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 导入结果 -->
+    <div class="card mb-3" id="result_section" style="display: none;">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="fas fa-clipboard-check"></i> 导入结果</h5>
+        </div>
+        <div class="card-body">
+            <div id="result_summary" class="alert mb-3"></div>
+            <div id="result_details"></div>
+            <button type="button" class="btn btn-primary" onclick="window.location.reload()">
+                <i class="fas fa-redo"></i> 继续导入
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let parsedData = [];
+
+// 角色显示配置
+const roleConfig = {
+    admin: { label: '管理员', color: 'danger', icon: 'crown' },
+    teacher: { label: '教师', color: 'primary', icon: 'chalkboard-teacher' },
+    moderator: { label: '版主', color: 'warning', icon: 'shield-alt' },
+    standard: { label: '标准用户', color: 'info', icon: 'user' },
+    student: { label: '学生', color: 'success', icon: 'user-graduate' }
+};
+
+// 解析CSV数据
+function parseCSV(csvText) {
+    const lines = csvText.trim().split('\n');
+    if (lines.length === 0) {
+        alert('CSV数据为空');
+        return;
+    }
+    
+    parsedData = [];
+    let headers = ['username', 'password', 'email', 'nickname', 'real_name', 'role'];
+    let startRow = 0;
+    
+    // 检查第一行是否为标题行
+    const firstLine = lines[0].toLowerCase();
+    if (firstLine.includes('username') || firstLine.includes('用户名')) {
+        const headerCells = parseCSVLine(lines[0]);
+        headers = headerCells.map(h => {
+            h = h.trim().toLowerCase();
+            if (h === 'username' || h === '用户名') return 'username';
+            if (h === 'password' || h === '密码') return 'password';
+            if (h === 'email' || h === '邮箱') return 'email';
+            if (h === 'nickname' || h === '昵称') return 'nickname';
+            if (h === 'real_name' || h === 'realname' || h === '真实姓名' || h === '姓名') return 'real_name';
+            if (h === 'role' || h === '角色' || h === '权限') return 'role';
+            return h;
+        });
+        startRow = 1;
+    }
+    
+    // 解析数据行
+    for (let i = startRow; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        
+        const cells = parseCSVLine(line);
+        const row = { row_number: i + 1 };
+        
+        for (let j = 0; j < headers.length && j < cells.length; j++) {
+            const value = cells[j].trim();
+            if (value) {
+                row[headers[j]] = value;
+            }
+        }
+        
+        // 应用默认值
+        if (row.username) {
+            if (!row.nickname) row.nickname = row.username;
+            if (!row.real_name) row.real_name = row.username;
+            if (!row.email) row.email = row.username + '@user.local';
+            if (!row.role) row.role = 'student';
+            
+            // 规范化角色
+            row.role = normalizeRole(row.role);
+            
+            parsedData.push(row);
+        }
+    }
+    
+    if (parsedData.length === 0) {
+        alert('没有解析到有效的数据行，请检查CSV格式');
+        return;
+    }
+    
+    displayPreview();
+}
+
+// 规范化角色名称
+function normalizeRole(role) {
+    const r = role.toLowerCase();
+    if (r === 'admin' || r === '管理员') return 'admin';
+    if (r === 'teacher' || r === '教师') return 'teacher';
+    if (r === 'moderator' || r === '版主') return 'moderator';
+    if (r === 'student' || r === '学生') return 'student';
+    if (r === 'standard' || r === '标准') return 'standard';
+    return 'student'; // 默认
+}
+
+// 简单CSV行解析
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        
+        if (char === '"') {
+            if (inQuotes && line[i + 1] === '"') {
+                current += '"';
+                i++;
+            } else {
+                inQuotes = !inQuotes;
+            }
+        } else if (char === ',' && !inQuotes) {
+            result.push(current);
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    result.push(current);
+    
+    return result;
+}
+
+// 显示预览
+function displayPreview() {
+    const tbody = document.getElementById('preview_tbody');
+    tbody.innerHTML = '';
+    
+    // 统计角色分布
+    const roleStats = {};
+    parsedData.forEach(row => {
+        roleStats[row.role] = (roleStats[row.role] || 0) + 1;
+    });
+    
+    parsedData.forEach((row, index) => {
+        const cfg = roleConfig[row.role] || roleConfig.student;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${index + 1}</td>
+            <td><strong>${escapeHtml(row.username)}</strong></td>
+            <td><code>${'*'.repeat(Math.min(row.password?.length || 0, 8))}</code></td>
+            <td>${escapeHtml(row.email || '-')}</td>
+            <td><span class="badge bg-info">${escapeHtml(row.nickname || '-')}</span></td>
+            <td><span class="badge bg-success">${escapeHtml(row.real_name || '-')}</span></td>
+            <td><span class="badge bg-${cfg.color}"><i class="fas fa-${cfg.icon}"></i> ${cfg.label}</span></td>
+            <td><span class="badge bg-${row.password ? 'success' : 'danger'}">${row.password ? '✓ 就绪' : '✗ 缺少密码'}</span></td>
+        `;
+        tbody.appendChild(tr);
+    });
+    
+    // 显示统计
+    let roleStatsHtml = '<div class="d-flex gap-2 flex-wrap">';
+    Object.keys(roleStats).sort().forEach(role => {
+        const cfg = roleConfig[role] || roleConfig.student;
+        roleStatsHtml += `
+            <span class="badge bg-${cfg.color}">
+                <i class="fas fa-${cfg.icon}"></i> ${cfg.label}: ${roleStats[role]}
+            </span>
+        `;
+    });
+    roleStatsHtml += '</div>';
+    
+    document.getElementById('role_stats').innerHTML = `
+        <strong><i class="fas fa-chart-pie"></i> 角色分布：</strong>
+        ${roleStatsHtml}
+    `;
+    
+    document.getElementById('preview_stats').innerHTML = `
+        <i class="fas fa-chart-bar"></i> <strong>数据统计</strong>：
+        共 <span class="badge bg-primary">${parsedData.length}</span> 条记录
+    `;
+    
+    document.getElementById('preview_section').style.display = 'block';
+    document.getElementById('preview_section').scrollIntoView({ behavior: 'smooth' });
+}
+
+// 执行导入
+async function performImport() {
+    if (parsedData.length === 0) {
+        alert('没有数据可导入');
+        return;
+    }
+    
+    if (!confirm(`确认导入 ${parsedData.length} 个用户吗？此操作不可撤销！`)) {
+        return;
+    }
+    
+    // 转换为CSV格式
+    let csvData = 'username,password,email,nickname,real_name,role\n';
+    parsedData.forEach(row => {
+        csvData += `${row.username},${row.password},${row.email},${row.nickname},${row.real_name},${row.role}\n`;
+    });
+    
+    const btn = document.getElementById('btn_import');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 导入中，请稍候...';
+    
+    try {
+        const response = await fetch('/api/v1/admin/bulk-import-users', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                csv_data: csvData
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            displayResult(result.results);
+        } else {
+            alert('导入失败：' + (result.error || '未知错误'));
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> 确认导入（不可撤销）';
+        }
+    } catch (error) {
+        console.error('导入错误:', error);
+        alert('导入失败：' + error.message);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> 确认导入（不可撤销）';
+    }
+}
+
+// 显示结果
+function displayResult(results) {
+    const summary = document.getElementById('result_summary');
+    const details = document.getElementById('result_details');
+    
+    const successRate = results.total > 0 ? Math.round((results.success / results.total) * 100) : 0;
+    
+    summary.className = results.failed > 0 ? 'alert alert-warning' : 'alert alert-success';
+    summary.innerHTML = `
+        <h5><i class="fas fa-check-circle"></i> 导入完成</h5>
+        <p class="mb-0">
+            总计：<strong>${results.total}</strong> 条 | 
+            成功：<strong class="text-success">${results.success}</strong> 条 | 
+            失败：<strong class="text-danger">${results.failed}</strong> 条 | 
+            成功率：<strong>${successRate}%</strong>
+        </p>
+    `;
+    
+    if (results.errors && results.errors.length > 0) {
+        let errorHtml = '<h6 class="text-danger"><i class="fas fa-exclamation-triangle"></i> 失败记录详情：</h6><ul class="list-group">';
+        results.errors.forEach(err => {
+            errorHtml += `
+                <li class="list-group-item list-group-item-danger">
+                    <strong>第${err.row}行</strong> - 用户名: <code>${escapeHtml(err.username || '(空)')}</code>
+                    <br><span class="text-muted">原因: ${escapeHtml(err.error)}</span>
+                </li>
+            `;
+        });
+        errorHtml += '</ul>';
+        details.innerHTML = errorHtml;
+    } else {
+        details.innerHTML = '<p class="text-success"><i class="fas fa-thumbs-up"></i> 所有用户导入成功！</p>';
+    }
+    
+    document.getElementById('preview_section').style.display = 'none';
+    document.getElementById('result_section').style.display = 'block';
+    document.getElementById('result_section').scrollIntoView({ behavior: 'smooth' });
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// 事件监听
+document.getElementById('btn_parse_csv').addEventListener('click', () => {
+    const fileInput = document.getElementById('csv_file');
+    const textInput = document.getElementById('csv_text');
+    
+    if (fileInput.files.length > 0) {
+        const reader = new FileReader();
+        reader.onload = (e) => parseCSV(e.target.result);
+        reader.readAsText(fileInput.files[0]);
+    } else if (textInput.value.trim()) {
+        parseCSV(textInput.value);
+    } else {
+        alert('请上传CSV文件或粘贴CSV数据');
+    }
+});
+
+document.getElementById('btn_import').addEventListener('click', performImport);
+
+document.getElementById('btn_cancel').addEventListener('click', () => {
+    document.getElementById('preview_section').style.display = 'none';
+    parsedData = [];
+});
+</script>
+
+<% render("views/partials/footer") %>

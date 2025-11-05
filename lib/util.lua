@@ -102,6 +102,97 @@ local function cache_buster ()
     return cache_buster_value
 end
 
+-- 解析CSV数据
+-- 支持引号包裹的字段，处理字段中的逗号和换行
+local function parse_csv(csv_text)
+    local lines = {}
+    local current_line = {}
+    local current_field = ""
+    local in_quotes = false
+    local i = 1
+    
+    while i <= #csv_text do
+        local char = csv_text:sub(i, i)
+        
+        if char == '"' then
+            if in_quotes and i < #csv_text and csv_text:sub(i+1, i+1) == '"' then
+                -- 双引号转义
+                current_field = current_field .. '"'
+                i = i + 1
+            else
+                in_quotes = not in_quotes
+            end
+        elseif char == ',' and not in_quotes then
+            table.insert(current_line, current_field)
+            current_field = ""
+        elseif char == '\n' and not in_quotes then
+            if current_field ~= "" or #current_line > 0 then
+                table.insert(current_line, current_field)
+                if #current_line > 0 then
+                    table.insert(lines, current_line)
+                end
+                current_line = {}
+                current_field = ""
+            end
+        elseif char == '\r' and not in_quotes then
+            -- 跳过回车符
+        else
+            current_field = current_field .. char
+        end
+        
+        i = i + 1
+    end
+    
+    -- 处理最后一行
+    if current_field ~= "" or #current_line > 0 then
+        table.insert(current_line, current_field)
+        if #current_line > 0 then
+            table.insert(lines, current_line)
+        end
+    end
+    
+    return lines
+end
+
+-- 将CSV行转换为用户对象数组
+-- headers: 列名数组，例如 {"username", "password", "email", "nickname", "real_name", "role"}
+-- rows: CSV解析后的数据行
+-- apply_defaults: 是否应用默认值（nickname和real_name默认为username）
+local function csv_to_users(headers, rows, apply_defaults)
+    local users = {}
+    
+    for row_idx, row in ipairs(rows) do
+        local user = {}
+        for col_idx, value in ipairs(row) do
+            if headers[col_idx] then
+                -- 去除前后空格
+                value = value:match("^%s*(.-)%s*$")
+                if value ~= "" then
+                    user[headers[col_idx]] = value
+                end
+            end
+        end
+        
+        -- 应用默认值
+        if apply_defaults and user.username then
+            if not user.nickname or user.nickname == "" then
+                user.nickname = user.username
+            end
+            if not user.real_name or user.real_name == "" then
+                user.real_name = user.username
+            end
+        end
+        
+        -- 只添加至少有用户名的记录
+        if user.username then
+            user.row_number = row_idx + 1  -- +1 因为第一行是标题
+            table.insert(users, user)
+        end
+    end
+    
+    return users
+end
+
 
 return {
   capitalize = capitalize,
@@ -110,4 +201,6 @@ return {
   visualize_whitespace_html = visualize_whitespace_html,
   group_by_type = group_by_type,
   cache_buster = cache_buster,
+  parse_csv = parse_csv,
+  csv_to_users = csv_to_users,
 }

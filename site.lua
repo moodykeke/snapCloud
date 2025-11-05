@@ -562,6 +562,21 @@ app:get('/teacher/class/:id', capture_errors(function (self)
     return { render = 'teacher/class_detail' }
 end))
 
+-- Teacher bulk import students
+app:get('/teacher/bulk-import-students', capture_errors(function (self)
+    assert_exists(self.current_user)
+    if not self.current_user.is_teacher and not self.current_user:isadmin() then
+        yield_error('需要教师权限')
+    end
+    return { render = 'teacher/bulk_import_students' }
+end))
+
+-- Admin bulk import users
+app:get('/admin/bulk-import-users', capture_errors(function (self)
+    assert_admin(self.current_user)
+    return { render = 'admin/bulk_import_users' }
+end))
+
 -- Student pages  
 app:get('/student/assignments', capture_errors(function (self)
     assert_exists(self.current_user)

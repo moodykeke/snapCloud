@@ -1,0 +1,396 @@
+<% render("views/partials/header", { page_title = "批量导入学生" }) %>
+
+<div class="container mt-4">
+    <h2><i class="fas fa-file-upload"></i> 批量导入学生</h2>
+    
+    <div class="alert alert-info">
+        <h5><i class="fas fa-info-circle"></i> 使用说明</h5>
+        <ul>
+            <li><strong>必填字段</strong>：用户名、密码</li>
+            <li><strong>可选字段</strong>：邮箱、昵称、真实姓名</li>
+            <li><strong>默认值</strong>：昵称和真实姓名如为空，则默认为用户名</li>
+            <li><strong>格式</strong>：CSV文件，支持中英文标题行</li>
+            <li>如果用户已存在，将更新其昵称、真实姓名和邮箱信息</li>
+        </ul>
+    </div>
+
+    <!-- 选择班级 -->
+    <div class="card mb-3">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-chalkboard-teacher"></i> 第一步：选择目标班级</h5>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="target_class" class="form-label"><strong>选择班级</strong></label>
+                <select id="target_class" class="form-select" required>
+                    <option value="">-- 请选择班级 --</option>
+                </select>
+                <div class="form-text">学生将被添加到选中的班级中</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CSV示例 -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-file-csv"></i> CSV格式示例</h5>
+        </div>
+        <div class="card-body">
+            <p>支持以下两种格式（带或不带标题行）：</p>
+            <pre class="bg-light p-3 border rounded"><code>username,password,email,nickname,real_name
+student001,pass123,s001@school.com,小明,张明
+student002,pass456,s002@school.com,小红,李红
+student003,pass789,,,王刚</code></pre>
+            <p class="text-muted small">第三行示例：邮箱、昵称、真实姓名为空时，昵称和真实姓名将自动设为"student003"</p>
+        </div>
+    </div>
+
+    <!-- 上传CSV -->
+    <div class="card mb-3">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="fas fa-upload"></i> 第二步：上传CSV文件或粘贴数据</h5>
+        </div>
+        <div class="card-body">
+            <!-- 文件上传 -->
+            <div class="mb-3">
+                <label for="csv_file" class="form-label"><strong>上传CSV文件</strong></label>
+                <input type="file" class="form-control" id="csv_file" accept=".csv,.txt">
+            </div>
+
+            <div class="text-center my-2">
+                <span class="badge bg-secondary">或</span>
+            </div>
+
+            <!-- 粘贴数据 -->
+            <div class="mb-3">
+                <label for="csv_text" class="form-label"><strong>粘贴CSV数据</strong></label>
+                <textarea id="csv_text" class="form-control" rows="8" placeholder="username,password,email,nickname,real_name&#10;student001,pass123,s001@school.com,小明,张明&#10;student002,pass456,s002@school.com,小红,李红"></textarea>
+            </div>
+
+            <button type="button" class="btn btn-primary" id="btn_parse_csv">
+                <i class="fas fa-search"></i> 预览数据
+            </button>
+        </div>
+    </div>
+
+    <!-- 预览数据 -->
+    <div class="card mb-3" id="preview_section" style="display: none;">
+        <div class="card-header bg-warning">
+            <h5 class="mb-0"><i class="fas fa-eye"></i> 第三步：预览并确认数据</h5>
+        </div>
+        <div class="card-body">
+            <div id="preview_stats" class="alert alert-light mb-3"></div>
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <table class="table table-bordered table-hover table-sm">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th>#</th>
+                            <th>用户名</th>
+                            <th>密码</th>
+                            <th>邮箱</th>
+                            <th>昵称</th>
+                            <th>真实姓名</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody id="preview_tbody"></tbody>
+                </table>
+            </div>
+
+            <div class="mt-3">
+                <button type="button" class="btn btn-success btn-lg" id="btn_import">
+                    <i class="fas fa-check-circle"></i> 确认导入
+                </button>
+                <button type="button" class="btn btn-secondary" id="btn_cancel">
+                    <i class="fas fa-times"></i> 取消
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 导入结果 -->
+    <div class="card mb-3" id="result_section" style="display: none;">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="fas fa-clipboard-check"></i> 导入结果</h5>
+        </div>
+        <div class="card-body">
+            <div id="result_summary" class="alert mb-3"></div>
+            <div id="result_details"></div>
+            <button type="button" class="btn btn-primary" onclick="window.location.reload()">
+                <i class="fas fa-redo"></i> 继续导入
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let parsedData = [];
+let classList = [];
+
+// 加载班级列表
+async function loadClasses() {
+    try {
+        const response = await fetch('/api/v1/classes');
+        const data = await response.json();
+        
+        const select = document.getElementById('target_class');
+        select.innerHTML = '<option value="">-- 请选择班级 --</option>';
+        
+        if (Array.isArray(data.classes)) {
+            classList = data.classes;
+            data.classes.forEach(c => {
+                const option = document.createElement('option');
+                option.value = c.id;
+                option.textContent = `${c.name} (${c.student_count || 0}人)`;
+                select.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('加载班级列表失败:', error);
+        alert('加载班级列表失败，请刷新页面重试');
+    }
+}
+
+// 解析CSV数据
+function parseCSV(csvText) {
+    const lines = csvText.trim().split('\n');
+    if (lines.length === 0) {
+        alert('CSV数据为空');
+        return;
+    }
+    
+    parsedData = [];
+    let headers = ['username', 'password', 'email', 'nickname', 'real_name'];
+    let startRow = 0;
+    
+    // 检查第一行是否为标题行
+    const firstLine = lines[0].toLowerCase();
+    if (firstLine.includes('username') || firstLine.includes('用户名')) {
+        // 解析标题行
+        const headerCells = parseCSVLine(lines[0]);
+        headers = headerCells.map(h => {
+            h = h.trim().toLowerCase();
+            if (h === 'username' || h === '用户名') return 'username';
+            if (h === 'password' || h === '密码') return 'password';
+            if (h === 'email' || h === '邮箱') return 'email';
+            if (h === 'nickname' || h === '昵称') return 'nickname';
+            if (h === 'real_name' || h === 'realname' || h === '真实姓名' || h === '姓名') return 'real_name';
+            return h;
+        });
+        startRow = 1;
+    }
+    
+    // 解析数据行
+    for (let i = startRow; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        
+        const cells = parseCSVLine(line);
+        const row = { row_number: i + 1 };
+        
+        for (let j = 0; j < headers.length && j < cells.length; j++) {
+            const value = cells[j].trim();
+            if (value) {
+                row[headers[j]] = value;
+            }
+        }
+        
+        // 应用默认值
+        if (row.username) {
+            if (!row.nickname) row.nickname = row.username;
+            if (!row.real_name) row.real_name = row.username;
+            if (!row.email) row.email = row.username + '@student.local';
+            parsedData.push(row);
+        }
+    }
+    
+    if (parsedData.length === 0) {
+        alert('没有解析到有效的数据行，请检查CSV格式');
+        return;
+    }
+    
+    displayPreview();
+}
+
+// 简单CSV行解析（处理引号）
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        
+        if (char === '"') {
+            if (inQuotes && line[i + 1] === '"') {
+                current += '"';
+                i++;
+            } else {
+                inQuotes = !inQuotes;
+            }
+        } else if (char === ',' && !inQuotes) {
+            result.push(current);
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    result.push(current);
+    
+    return result;
+}
+
+// 显示预览
+function displayPreview() {
+    const tbody = document.getElementById('preview_tbody');
+    tbody.innerHTML = '';
+    
+    parsedData.forEach((row, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${index + 1}</td>
+            <td><strong>${escapeHtml(row.username)}</strong></td>
+            <td><code>${'*'.repeat(Math.min(row.password?.length || 0, 8))}</code></td>
+            <td>${escapeHtml(row.email || '-')}</td>
+            <td><span class="badge bg-info">${escapeHtml(row.nickname || '-')}</span></td>
+            <td><span class="badge bg-success">${escapeHtml(row.real_name || '-')}</span></td>
+            <td><span class="badge bg-${row.password ? 'success' : 'danger'}">${row.password ? '✓ 就绪' : '✗ 缺少密码'}</span></td>
+        `;
+        tbody.appendChild(tr);
+    });
+    
+    document.getElementById('preview_stats').innerHTML = `
+        <i class="fas fa-chart-bar"></i> <strong>数据统计</strong>：
+        共 <span class="badge bg-primary">${parsedData.length}</span> 条记录
+    `;
+    
+    document.getElementById('preview_section').style.display = 'block';
+    document.getElementById('preview_section').scrollIntoView({ behavior: 'smooth' });
+}
+
+// 执行导入
+async function performImport() {
+    const classId = document.getElementById('target_class').value;
+    if (!classId) {
+        alert('请选择目标班级');
+        return;
+    }
+    
+    if (parsedData.length === 0) {
+        alert('没有数据可导入');
+        return;
+    }
+    
+    // 转换为CSV格式
+    let csvData = 'username,password,email,nickname,real_name\n';
+    parsedData.forEach(row => {
+        csvData += `${row.username},${row.password},${row.email},${row.nickname},${row.real_name}\n`;
+    });
+    
+    const btn = document.getElementById('btn_import');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 导入中...';
+    
+    try {
+        const response = await fetch('/api/v1/teachers/bulk-import-students', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                class_id: parseInt(classId),
+                csv_data: csvData
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            displayResult(result.results);
+        } else {
+            alert('导入失败：' + (result.error || '未知错误'));
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check-circle"></i> 确认导入';
+        }
+    } catch (error) {
+        console.error('导入错误:', error);
+        alert('导入失败：' + error.message);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check-circle"></i> 确认导入';
+    }
+}
+
+// 显示结果
+function displayResult(results) {
+    const summary = document.getElementById('result_summary');
+    const details = document.getElementById('result_details');
+    
+    const successRate = results.total > 0 ? Math.round((results.success / results.total) * 100) : 0;
+    
+    summary.className = results.failed > 0 ? 'alert alert-warning' : 'alert alert-success';
+    summary.innerHTML = `
+        <h5><i class="fas fa-check-circle"></i> 导入完成</h5>
+        <p class="mb-0">
+            总计：<strong>${results.total}</strong> 条 | 
+            成功：<strong class="text-success">${results.success}</strong> 条 | 
+            失败：<strong class="text-danger">${results.failed}</strong> 条 | 
+            成功率：<strong>${successRate}%</strong>
+        </p>
+    `;
+    
+    if (results.errors && results.errors.length > 0) {
+        let errorHtml = '<h6 class="text-danger"><i class="fas fa-exclamation-triangle"></i> 失败记录详情：</h6><ul class="list-group">';
+        results.errors.forEach(err => {
+            errorHtml += `
+                <li class="list-group-item list-group-item-danger">
+                    <strong>第${err.row}行</strong> - 用户名: <code>${escapeHtml(err.username || '(空)')}</code>
+                    <br><span class="text-muted">原因: ${escapeHtml(err.error)}</span>
+                </li>
+            `;
+        });
+        errorHtml += '</ul>';
+        details.innerHTML = errorHtml;
+    } else {
+        details.innerHTML = '<p class="text-success"><i class="fas fa-thumbs-up"></i> 所有记录导入成功！</p>';
+    }
+    
+    document.getElementById('preview_section').style.display = 'none';
+    document.getElementById('result_section').style.display = 'block';
+    document.getElementById('result_section').scrollIntoView({ behavior: 'smooth' });
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// 事件监听
+document.getElementById('btn_parse_csv').addEventListener('click', () => {
+    const fileInput = document.getElementById('csv_file');
+    const textInput = document.getElementById('csv_text');
+    
+    if (fileInput.files.length > 0) {
+        const reader = new FileReader();
+        reader.onload = (e) => parseCSV(e.target.result);
+        reader.readAsText(fileInput.files[0]);
+    } else if (textInput.value.trim()) {
+        parseCSV(textInput.value);
+    } else {
+        alert('请上传CSV文件或粘贴CSV数据');
+    }
+});
+
+document.getElementById('btn_import').addEventListener('click', performImport);
+
+document.getElementById('btn_cancel').addEventListener('click', () => {
+    document.getElementById('preview_section').style.display = 'none';
+    parsedData = [];
+});
+
+// 页面加载时获取班级列表
+loadClasses();
+</script>
+
+<% render("views/partials/footer") %>

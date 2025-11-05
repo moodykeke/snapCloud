@@ -38,6 +38,8 @@ require 'controllers.site'
 require 'controllers.assignment'
 require 'controllers.class'
 
+local BulkImportController = require 'controllers.bulk_import'
+
 -- All API routes are nested under /api/v1,
 -- which is currently an optional prefix.
 local function api_route(path) return '/(api/' .. api_version .. '/)' .. path end
@@ -142,9 +144,14 @@ app:post(api_route('users/current/nickname'), capture_errors(function (self)
     end
 end))
 
--- Update real name
+-- Update real name (仅教师和管理员可修改)
 app:post(api_route('users/current/realname'), capture_errors(function (self)
     assert_exists(self.current_user)
+    
+    -- 检查权限：只有教师和管理员可以修改真实姓名
+    if not self.current_user.is_teacher and not self.current_user:isadmin() then
+        return errorResponse('只有教师和管理员可以修改真实姓名', 403)
+    end
     
     local real_name = self.params.real_name
     if real_name and real_name ~= '' then
@@ -503,4 +510,21 @@ app:match(api_route('student/classes'), respond_to({
 -- Get all students (for adding to classes)
 app:match(api_route('students'), respond_to({
     GET = ClassController.get_all_students
+}))
+
+-- Bulk Import (批量导入)
+-- ======================
+
+-- Teacher bulk import students
+app:match(api_route('teachers/bulk-import-students'), respond_to({
+    POST = json_params(function(self)
+        return BulkImportController:bulk_import_students(self)
+    end)
+}))
+
+-- Admin bulk import users
+app:match(api_route('admin/bulk-import-users'), respond_to({
+    POST = json_params(function(self)
+        return BulkImportController:bulk_import_users(self)
+    end)
 }))
