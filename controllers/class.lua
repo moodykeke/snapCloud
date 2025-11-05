@@ -2,6 +2,7 @@
 -- ===========================
 -- 班级管理控制器
 
+local cjson = require("cjson")
 local db = package.loaded.db
 local yield_error = package.loaded.yield_error
 local capture_errors = package.loaded.capture_errors
@@ -73,6 +74,11 @@ ClassController = {
                 published_assignment_count = 0,
                 total_assignment_count = 0
             }
+        end
+        
+        -- 确保空数组被正确序列化为 JSON 数组而不是对象
+        if #classes == 0 then
+            classes = cjson.empty_array
         end
         
         return jsonResponse({ success = true, classes = classes })
@@ -331,5 +337,28 @@ ClassController = {
         ]], self.current_user.id)
         
         return jsonResponse({ success = true, classes = classes })
+    end),
+    
+    -- 获取所有学生列表（供添加成员时选择）
+    get_all_students = capture_errors(function (self)
+        if not self.current_user then
+            yield_error('请先登录')
+        end
+        
+        if not self.current_user.is_teacher and not self.current_user:isadmin() then
+            yield_error('只有教师可以查看学生列表')
+        end
+        
+        -- 获取所有非教师用户
+        local students = Users:select(
+            'WHERE is_teacher = false AND verified = true ORDER BY username'
+        )
+        
+        -- 确保空数组被正确序列化
+        if #students == 0 then
+            students = cjson.empty_array
+        end
+        
+        return jsonResponse({ success = true, users = students })
     end),
 }

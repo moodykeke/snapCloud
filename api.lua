@@ -473,3 +473,8 @@ app:match(api_route('classes/:id/members/:student_id/toggle'), respond_to({
 app:match(api_route('student/classes'), respond_to({
     GET = ClassController.student_classes
 }))
+
+-- Get all students (for adding to classes)
+app:match(api_route('students'), respond_to({
+    GET = ClassController.get_all_students
+}))

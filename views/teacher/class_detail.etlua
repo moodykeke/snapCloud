@@ -117,20 +117,26 @@ function renderMembers() {
 
 // 显示添加学生对话框
 async function showAddStudentDialog() {
-    // 加载教师创建的所有学生
+    // 加载所有学生
     try {
-        const response = await fetch('/api/learners'); // 需要实现这个 API
+        const response = await fetch('/api/v1/students');
         const data = await response.json();
         
-        if (data.users) {
+        console.log('Students API response:', data);
+        
+        if (data.success && Array.isArray(data.users)) {
             allStudents = data.users;
             renderStudentSelector();
             const modal = new bootstrap.Modal(document.getElementById('addStudentModal'));
             modal.show();
+        } else if (data.errors) {
+            showError(data.errors[0] || '加载学生列表失败');
+        } else {
+            showError('加载学生列表失败');
         }
     } catch (error) {
         console.error('Error:', error);
-        showError('加载学生列表失败');
+        showError('加载学生列表失败: ' + error.message);
     }
 }
 
