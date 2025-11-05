@@ -6,14 +6,12 @@
 -- Copyright (C) 2025
 -- This file is part of Snap Cloud.
 
+local cjson = require("cjson")
 local util = package.loaded.util
 local validate = package.loaded.validate
 local db = package.loaded.db
 local yield_error = package.loaded.yield_error
 local capture_errors = package.loaded.capture_errors
-local jsonResponse = package.loaded.jsonResponse
-local okResponse = package.loaded.okResponse
-local errorResponse = package.loaded.errorResponse
 
 local Assignments = package.loaded.Assignments
 local Submissions = package.loaded.Submissions
@@ -72,7 +70,12 @@ AssignmentController = {
             assignment.stats = Assignments:get_stats(assignment.id)
         end
         
-        return jsonResponse({ assignments = assignments })
+        -- 确保空数组正确序列化为 JSON 数组
+        if #assignments == 0 then
+            assignments = cjson.empty_array
+        end
+        
+        return jsonResponse({ success = true, assignments = assignments })
     end),
     
     -- 获取单个作业详情
