@@ -1,0 +1,312 @@
+<link rel="stylesheet" href="/static/style/admin.css">
+<script src="/static/js/cloud.js"></script>
+
+<h1><%- locale.get('student_assignments') %></h1>
+
+<ul class="nav nav-tabs mb-3" id="assignmentTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="available-tab" data-bs-toggle="tab" data-bs-target="#available" type="button">
+            <%- locale.get('available_assignments') %>
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="submitted-tab" data-bs-toggle="tab" data-bs-target="#submitted" type="button">
+            <%- locale.get('my_submissions') %>
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="assignmentTabsContent">
+    <!-- Available Assignments Tab -->
+    <div class="tab-pane fade show active" id="available" role="tabpanel">
+        <div id="available-container">
+            <p class="text-center">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <br>加载中...
+            </p>
+        </div>
+    </div>
+    
+    <!-- My Submissions Tab -->
+    <div class="tab-pane fade" id="submitted" role="tabpanel">
+        <div id="submitted-container">
+            <p class="text-center">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <br>加载中...
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Submit Assignment Dialog -->
+<div class="modal fade" id="submitModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><%- locale.get('submit_assignment') %></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="submitForm">
+                    <input type="hidden" name="assignment_id" id="submit_assignment_id">
+                    <div class="mb-3">
+                        <label class="form-label"><%- locale.get('select_project') %>*</label>
+                        <select class="form-select" name="project_id" id="project_select" required>
+                            <option value="">加载项目中...</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><%- locale.get('student_note') %></label>
+                        <textarea class="form-control" name="student_note" rows="3" placeholder="可选：添加您的说明或反思"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <%- locale.get('cancel') %>
+                </button>
+                <button type="button" class="btn btn-primary" onclick="submitAssignment()">
+                    <%- locale.get('submit_assignment') %>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let submitModal;
+let myProjects = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    submitModal = new bootstrap.Modal(document.getElementById('submitModal'));
+    loadAvailableAssignments();
+    loadMyProjects();
+    
+    // Tab change event
+    document.getElementById('submitted-tab').addEventListener('shown.bs.tab', function () {
+        loadMySubmissions();
+    });
+});
+
+async function loadMyProjects() {
+    try {
+        const response = await cloud.get('/api/projects');
+        const data = await response.json();
+        myProjects = data.projects || [];
+        
+        const select = document.getElementById('project_select');
+        select.innerHTML = '<option value="">-- <%- locale.get("select_project") %> --</option>' +
+            myProjects.map(p => `<option value="${p.id}">${escapeHtml(p.projectname)}</option>`).join('');
+    } catch (error) {
+        console.error('Failed to load projects:', error);
+    }
+}
+
+async function loadAvailableAssignments() {
+    try {
+        const response = await cloud.get('/api/student/assignments');
+        const data = await response.json();
+        
+        if (data.assignments && data.assignments.length > 0) {
+            renderAvailableAssignments(data.assignments);
+        } else {
+            document.getElementById('available-container').innerHTML = `
+                <div class="alert alert-info">
+                    <%- locale.get('no_available_assignments') %>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Failed to load assignments:', error);
+        document.getElementById('available-container').innerHTML = `
+            <div class="alert alert-danger">加载失败: ${error.message}</div>
+        `;
+    }
+}
+
+function renderAvailableAssignments(assignments) {
+    const now = new Date();
+    const html = assignments.map(assignment => {
+        const dueDate = assignment.due_date ? new Date(assignment.due_date) : null;
+        const isOverdue = dueDate && dueDate < now;
+        const submission = assignment.my_submission;
+        
+        let dueDateHtml = '<%- locale.get("no_due_date") %>';
+        if (dueDate) {
+            const diff = dueDate - now;
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            
+            if (isOverdue) {
+                dueDateHtml = `<span class="text-danger"><%- locale.get("overdue") %></span>`;
+            } else if (days > 0) {
+                dueDateHtml = `<span class="text-warning">${days} <%- locale.get("days_left") %></span>`;
+            } else if (hours > 0) {
+                dueDateHtml = `<span class="text-warning">${hours} <%- locale.get("hours_left") %></span>`;
+            } else {
+                dueDateHtml = `<span class="text-danger">即将截止</span>`;
+            }
+            dueDateHtml += `<br><small class="text-muted">${dueDate.toLocaleString('zh-CN')}</small>`;
+        }
+        
+        let statusBadge = '';
+        let actionButton = '';
+        
+        if (submission) {
+            if (submission.status === 'graded') {
+                statusBadge = `<span class="badge bg-success">已评分: ${submission.points}/${assignment.max_points}</span>`;
+            } else {
+                statusBadge = `<span class="badge bg-info"><%- locale.get("waiting_for_grade") %></span>`;
+            }
+            actionButton = `
+                <button class="btn btn-sm btn-warning" onclick="showSubmitDialog(${assignment.id})">
+                    <%- locale.get("resubmit") %> (v${(submission.version || 1) + 1})
+                </button>
+            `;
+        } else {
+            statusBadge = `<span class="badge bg-secondary"><%- locale.get("not_submitted") %></span>`;
+            actionButton = `
+                <button class="btn btn-sm btn-primary" onclick="showSubmitDialog(${assignment.id})">
+                    <%- locale.get("submit_assignment") %>
+                </button>
+            `;
+        }
+        
+        return `
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        ${escapeHtml(assignment.title)}
+                        ${statusBadge}
+                    </h5>
+                    <p class="card-text">${escapeHtml(assignment.description || '')}</p>
+                    <div class="row text-muted small mb-2">
+                        <div class="col-md-6">
+                            <%- locale.get('due_date') %>: ${dueDateHtml}
+                        </div>
+                        <div class="col-md-6">
+                            <%- locale.get('max_points') %>: ${assignment.max_points}
+                        </div>
+                    </div>
+                    ${submission && submission.feedback ? `
+                        <div class="alert alert-info mt-2">
+                            <strong><%- locale.get('teacher_feedback') %>:</strong><br>
+                            ${escapeHtml(submission.feedback)}
+                        </div>
+                    ` : ''}
+                    <div>
+                        ${actionButton}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    document.getElementById('available-container').innerHTML = html;
+}
+
+async function loadMySubmissions() {
+    try {
+        const response = await cloud.get('/api/my/submissions');
+        const data = await response.json();
+        
+        if (data.submissions && data.submissions.length > 0) {
+            renderMySubmissions(data.submissions);
+        } else {
+            document.getElementById('submitted-container').innerHTML = `
+                <div class="alert alert-info">暂无提交记录</div>
+            `;
+        }
+    } catch (error) {
+        console.error('Failed to load submissions:', error);
+        document.getElementById('submitted-container').innerHTML = `
+            <div class="alert alert-danger">加载失败: ${error.message}</div>
+        `;
+    }
+}
+
+function renderMySubmissions(submissions) {
+    const html = submissions.map(sub => {
+        const submittedAt = new Date(sub.submitted_at).toLocaleString('zh-CN');
+        const isLate = sub.is_late ? '<span class="badge bg-warning"><%- locale.get("is_late") %></span>' : '';
+        
+        let statusBadge = '';
+        if (sub.status === 'graded') {
+            statusBadge = `<span class="badge bg-success"><%- locale.get("status_graded") %>: ${sub.points}pts</span>`;
+        } else {
+            statusBadge = `<span class="badge bg-info"><%- locale.get("status_submitted") %></span>`;
+        }
+        
+        return `
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">
+                        <%- locale.get('submission_time') %>: ${submittedAt}
+                        ${isLate}
+                        ${statusBadge}
+                    </h6>
+                    ${sub.student_note ? `<p><strong>备注:</strong> ${escapeHtml(sub.student_note)}</p>` : ''}
+                    ${sub.feedback ? `
+                        <div class="alert alert-info">
+                            <strong><%- locale.get('teacher_feedback') %>:</strong><br>
+                            ${escapeHtml(sub.feedback)}
+                            ${sub.grade ? `<br><strong><%- locale.get('grade') %>:</strong> ${sub.grade}` : ''}
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    document.getElementById('submitted-container').innerHTML = html;
+}
+
+function showSubmitDialog(assignmentId) {
+    document.getElementById('submit_assignment_id').value = assignmentId;
+    document.getElementById('submitForm').reset();
+    document.getElementById('submit_assignment_id').value = assignmentId; // reset 会清空，再设置一次
+    submitModal.show();
+}
+
+async function submitAssignment() {
+    const form = document.getElementById('submitForm');
+    const formData = new FormData(form);
+    
+    const projectId = formData.get('project_id');
+    if (!projectId) {
+        alert('<%- locale.get("error_no_project_selected") %>');
+        return;
+    }
+    
+    const data = {
+        assignment_id: parseInt(formData.get('assignment_id')),
+        project_id: parseInt(projectId),
+        student_note: formData.get('student_note') || ''
+    };
+    
+    if (!confirm('<%- locale.get("confirm_submit_assignment") %>')) return;
+    
+    try {
+        const response = await cloud.post('/api/submit', null, data);
+        const result = await response.json();
+        
+        if (result.submission) {
+            submitModal.hide();
+            loadAvailableAssignments();
+            alert('<%- locale.get("submission_success") %>');
+        } else {
+            alert('<%- locale.get("error_submit_assignment") %>');
+        }
+    } catch (error) {
+        console.error('Failed to submit assignment:', error);
+        alert('<%- locale.get("error_submit_assignment") %>: ' + error.message);
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
