@@ -80,7 +80,7 @@
             <!-- TODO: This autoloads and Snap! steals focus, which it should not. -->
             <iframe allow="geolocation; microphone; camera"
                 sandbox="allow-scripts allow-same-origin"
-                title="project viewer"
+                title="<%- locale.get("project_title_project_viewer") %>"
                 autofocus=false
                 src="<%= project:url_for('viewer', params.devVersion) %>">
             </iframe>

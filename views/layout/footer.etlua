@@ -51,8 +51,8 @@
       <div class="credits col">
         <a href="/partners">
           <p>Snap<em>!</em> is brought to you by UC Berkeley and SAP.</p>
-          <img src="/static/img/berkeley-logo-white.svg" class="ucb-logo"alt="UC Berkeley Logo">
-          <img src="/static/img/sap-logo-footer.png" alt="SAP Logo">
+          <img src="/static/img/berkeley-logo-white.svg" class="ucb-logo"alt="<%- locale.get("layout_alt_uc_berkeley_logo") %>">
+          <img src="/static/img/sap-logo-footer.png" alt="<%- locale.get("layout_alt_sap_logo") %>">
         </a>
       </div>
     </div>

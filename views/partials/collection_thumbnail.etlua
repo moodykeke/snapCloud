@@ -5,7 +5,7 @@
         <span class="visually-hidden">no thumbnail aet</span>
     </div>
     <% else %>
-    <img class="collection-thumbnail" alt="collection thumbnail"
+    <img class="collection-thumbnail" alt="<%- locale.get("partials_alt_collection_thumbnail") %>"
         <% if (collection.thumbnail) then %>
             src="<%= collection.thumbnail %>">
         <% end %>

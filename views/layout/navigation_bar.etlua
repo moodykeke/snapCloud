@@ -40,10 +40,10 @@
       <span class="navbar-nav me-auto">
           <form role="search" action="search">
             <div class="input-group min-width">
-              <button class="btn btn-sm btn-outline-light" type="submit" aria-label="Search">
+              <button class="btn btn-sm btn-outline-light" type="submit" aria-label="<%- locale.get("layout_placeholder_search") %>">
                 <i class="fas fa-search" aria-hidden="true"></i>
               </button>
-              <input class="form-control form-control-sm" name="query" type="search" placeholder="Search" aria-label="Search Box">
+              <input class="form-control form-control-sm" name="query" type="search" placeholder="<%- locale.get("layout_placeholder_search") %>" aria-label="<%- locale.get("layout_placeholder_search") %> Box">
             </div>
           </form>
       </span>

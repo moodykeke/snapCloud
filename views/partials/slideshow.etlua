@@ -13,29 +13,29 @@
   <div class="carousel-item">
     <a href="/collection?username=snapcloud&collection=<%= totms[1].name %>">
       <img src="/static/img/totm.png"
-        alt="View Topic of the Month '<%= totms[1].name %>'" />
+        alt="<%- locale.get("partials_alt_view_topic_of_the_month") %> '<%= totms[1].name %>'" />
     </a>
   </div>
   <% end %>
 <!--
     <div class="carousel-item active">
-      <img src="/static/img/snapcon.png" alt="Snap! - Build Your Own Blocks">
+      <img src="/static/img/snapcon.png" alt="<%- locale.get("partials_alt_snap_build_your_own_blocks") %>">
     </div>
 -->
     <div class="carousel-item active">
-      <img src="/static/img/snap-byob.png" alt="Snap! - Build Your Own Blocks">
+      <img src="/static/img/snap-byob.png" alt="<%- locale.get("partials_alt_snap_build_your_own_blocks") %>">
     </div>
 
     <div class="carousel-item">
-      <img src="/static/img/lowfloor.png" alt="Snap! - Low Floor (showing flowers)">
+      <img src="/static/img/lowfloor.png" alt="<%- locale.get("partials_alt_snap_low_floor_showing_flowers") %>">
     </div>
 
     <div class="carousel-item">
-      <img src="/static/img/widewalls.png" alt="Snap! - Wide Walls">
+      <img src="/static/img/widewalls.png" alt="<%- locale.get("partials_alt_snap_wide_walls") %>">
     </div>
 
     <div class="carousel-item">
-      <img src="/static/img/noceiling.png" alt="Snap! - No Ceiling">
+      <img src="/static/img/noceiling.png" alt="<%- locale.get("partials_alt_snap_no_ceiling") %>">
     </div>
   </div>
 

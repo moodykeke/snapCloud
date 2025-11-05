@@ -6,7 +6,7 @@
     <li class="editor">
         <span class="badge text-bg-primary">
             <a href="<%= editor:url_for('site') %>"
-              ><%= editor.username %></a>
+              ><%= editor.<%- locale.get("partials_placeholder_username") %> %></a>
 
             <% if current_user and
                 ((collection.creator.id == current_user.id)
@@ -38,18 +38,18 @@
                 this.nextElementSibling.focus();"
             class="clickable add-editor"
             ><i class="fas fa-plus-circle"></i></a>
-        <input placeholder='username' hidden class="new-editor" onchange="
+        <input placeholder='<%- locale.get("partials_placeholder_username") %>' hidden class="new-editor" onchange="
         addEditor(this.value);
         this.value = '';
         flash(this, () => { this.hidden = true });"
         onblur="flash(this, () => { this.hidden = true });"></input>
     </span>
     <script>
-        addEditor = function (username) {
+        addEditor = function (<%- locale.get("partials_placeholder_username") %>) {
             cloud.post(
                 '/collection/<%= collection.id %>/editor',
                 Cloud.redirect,
-                { username: username }
+                { <%- locale.get("partials_placeholder_username") %>: <%- locale.get("partials_placeholder_username") %> }
             );
         };
         removeEditor = function (id) {

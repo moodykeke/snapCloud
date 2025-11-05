@@ -6,10 +6,10 @@
         <fieldset>
             <div class="mb-3">
                 <label for="email" class="form-label" localizable>
-                    Email address <span class="text-danger">*</span>
+                    <%- locale.get("sessions_placeholder_email_address") %> <span class="text-danger">*</span>
                 </label>
                 <input id="email" name="email" type="email" class="form-control"
-                       placeholder="Email address" aria-required="true" required>
+                       placeholder="<%- locale.get("sessions_placeholder_email_address") %>" aria-required="true" required>
             </div>
 
             <div class="mb-3">

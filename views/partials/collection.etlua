@@ -13,8 +13,8 @@
         <div class="collection-name"><%= item.name %></div>
     </a>
 <% if show_icons then %>
-    <span class="is-public" title="This item <%= item.shared and 'can be shared via URL' or 'is private'%>"><small><i class="fas <%= item.shared and 'fa-link' or 'fa-unlink' %>" aria-hidden="true"></i></small></span>
-    <span class="is-published" title="This item is <%= item.published and 'published' or 'unpublished' %>"><small><i class="fas <%= item.published and 'fa-eye' or 'fa-eye-slash' %>" aria-hidden="true"></i></small></span>
+    <span class="is-public" title="<%- locale.get("partials_title_this_item_itemshared_and") %> 'can be shared via URL' or 'is private'%>"><small><i class="fas <%= item.shared and 'fa-link' or 'fa-unlink' %>" aria-hidden="true"></i></small></span>
+    <span class="is-published" title="<%- locale.get("partials_title_this_item_is_itempublished_and") %> 'published' or 'unpublished' %>"><small><i class="fas <%= item.published and 'fa-eye' or 'fa-eye-slash' %>" aria-hidden="true"></i></small></span>
 <% end %>
 <% if show_author then %>
     <span

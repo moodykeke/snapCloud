@@ -4,17 +4,17 @@
 <%
     for _, section in ipairs({
         {
-            title = 'Front Page',
+            title = '<%- locale.get("admin_title_front_page") %>',
             query = "where page_path = 'index' and not type = 'totm'",
             page_path = 'index'
         },
         {
-            title = 'Examples',
+            title = '<%- locale.get("admin_title_examples") %>',
             query = "where page_path = 'examples'",
             page_path = 'examples'
         },
         {
-            title = 'Events',
+            title = '<%- locale.get("admin_title_events") %>',
             query = "where page_path = 'events'",
             page_path = 'events'
         },

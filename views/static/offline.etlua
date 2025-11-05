@@ -3,7 +3,7 @@
 
 <p>last updated on Nov. 25, 2021</p>
 <p>Snap! is a web application hosted at
-<a href="https://snap.berkeley.edu/run" title="Snap! online" rel="nofollow">https://snap.berkeley.edu/run</a>.</p>
+<a href="https://snap.berkeley.edu/run" title="<%- locale.get("static_title_snap_online") %>" rel="nofollow">https://snap.berkeley.edu/run</a>.</p>
 <p>If you would like to use Snap! without being connected to the internet, e.g. in a remote area
 or in a school with limited or unreliable online service there are two ways to set up Snap! locally
 on your computer: Either as a "progressive web app" (PWA) or by downloading the sources and opening
@@ -20,7 +20,7 @@ Install once and you're done.</p>
 <h3 tabindex="-1">Simple Steps:</h3>
 <ol>
     <li>Download the latest Snap! Release from
-    <a href="https://github.com/jmoenig/Snap/releases/latest" title="Snap! Source Code">https://github.com/jmoenig/Snap/releases/latest</a>, and unpack the contents of the archive to your local disk.</li>
+    <a href="https://github.com/jmoenig/Snap/releases/latest" title="<%- locale.get("static_title_snap_source_code") %>">https://github.com/jmoenig/Snap/releases/latest</a>, and unpack the contents of the archive to your local disk.</li>
     <li>Open the file <code>snap.html</code> in your browser.</li>
     <li>There is no step 3.</li>
 </ol>

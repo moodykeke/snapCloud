@@ -1,7 +1,7 @@
 <% content_for('title', locale.get('tos')) %>
 <h1>Terms of Service</h1>
 
-<p>Welcome to the <img src="static/img/small-logo.png" alt="Snap!" height="20px"> user community!</p>
+<p>Welcome to the <img src="static/img/small-logo.png" alt="<%- locale.get("static_alt_snap") %>" height="20px"> user community!</p>
 
 <p>Snap<em>!</em> is a visual computer programming language targeted mainly at users ages 12-20, although everyone is welcome here. Its design is deeply inspired by <a href="http://scratch.mit.edu/">Scratch</a>, a pioneering language and programming community for an overlapping but somewhat younger range of users, from the Lifelong Kindergarten Group at the MIT Media Lab.</p>
 
@@ -11,7 +11,7 @@
 
 <h2>Use of the software</h2>
 
-<p><img src="/static/img/small-logo.png" alt="Snap!" height="20px"> is free software. It is licensed under the <a href="https://www.gnu.org/licenses/agpl">GNU Affero General Public License</a>, which permits unlimited use for any purpose by anyone, but does not allow proprietary modified versions of the software; if you make a modified version of Snap<em>!</em>, you must make it available under the same terms as our version, including the provision of source code.</p>
+<p><img src="/static/img/small-logo.png" alt="<%- locale.get("static_alt_snap") %>" height="20px"> is free software. It is licensed under the <a href="https://www.gnu.org/licenses/agpl">GNU Affero General Public License</a>, which permits unlimited use for any purpose by anyone, but does not allow proprietary modified versions of the software; if you make a modified version of Snap<em>!</em>, you must make it available under the same terms as our version, including the provision of source code.</p>
 
 <p>(To download the Snap<em>!</em> source code, download or clone our <a href="https://github.com/jmoenig/Snap">Github repo</a>.)</p>
 

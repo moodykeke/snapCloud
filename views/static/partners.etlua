@@ -13,62 +13,62 @@
     <!-- TODO: Cleanup this list. Include UC Berkeley? -->
     <li>
         <a target="_blank" href="https://nsf.gov">
-            <img alt="NSF Logo" src="/static/img/nsf-logo.png"/>
+            <img alt="<%- locale.get("static_alt_nsf_logo") %>" src="/static/img/nsf-logo.png"/>
         </a>
     </li>
     <li>
         <a target="_blank" href="https://sap.com">
-            <img alt="SAP Logo" src="/static/img/sap-logo.png"/>
+            <img alt="<%- locale.get("static_alt_sap_logo") %>" src="/static/img/sap-logo.png"/>
         </a>
     </li>
     <li>
         <a target="_blank" href="https://miosoft.com">
-            <img alt="Miosoft Logo" src="/static/img/miosoft-logo.png"/>
+            <img alt="<%- locale.get("static_alt_miosoft_logo") %>" src="/static/img/miosoft-logo.png"/>
         </a>
     </li>
     <li>
         <a target="_blank" href="https://bjc.berkeley.edu">
-            <img alt="BJC Logo" src="/static/img/bjc-logo.png"/>
+            <img alt="<%- locale.get("static_alt_bjc_logo") %>" src="/static/img/bjc-logo.png"/>
         </a>
     </li>
     <li>
         <a target="_blank" href="https://edc.org">
-            <img alt="EDC Logo" src="/static/img/edc-logo.png"/>
+            <img alt="<%- locale.get("static_alt_edc_logo") %>" src="/static/img/edc-logo.png"/>
         </a>
     </li>
     <li>
         <a target="_blank" href="https://tealsk12.org">
-            <img alt="Microsoft TEALS logo" src="/static/img/teals-logo.png"/>
+            <img alt="<%- locale.get("static_alt_microsoft_teals_logo") %>" src="/static/img/teals-logo.png"/>
         </a>
     </li>
     <li>
         <a target="_blank" href="http://faberresidency.cat/">
-            <img alt="Faber Residency Logo" src="/static/img/faber-logo.png"/>
+            <img alt="<%- locale.get("static_alt_faber_residency_logo") %>" src="/static/img/faber-logo.png"/>
         </a>
     </li>
     <li>
         <a target="_blank" href="http://microblocks.fun">
-            <img alt="microblocks logo" src="/static/img/ublocks-logo.png"/>
+            <img alt="<%- locale.get("static_alt_microblocks_logo") %>" src="/static/img/ublocks-logo.png"/>
         </a>
     </li>
     <li>
         <a target="_blank" href="https://turtlestitch.org">
-            <img alt="TurtleStitch Logo" src="/static/img/turtlestitch-logo.png"/>
+            <img alt="<%- locale.get("static_alt_turtlestitch_logo") %>" src="/static/img/turtlestitch-logo.png"/>
         </a>
     </li>
     <li>
         <a target="_blank" href="http://snap4arduino.rocks">
-            <img alt="Snap4Arduino Logo" src="/static/img/s4a-logo.png"/>
+            <img alt="<%- locale.get("static_alt_snap4arduino_logo") %>" src="/static/img/s4a-logo.png"/>
         </a>
     </li>
     <li>
         <a target="_blank" href="http://beetleblocks.com">
-            <img alt="Beetle Blocks logo" src="/static/img/bb-logo.png"/>
+            <img alt="<%- locale.get("static_alt_beetle_blocks_logo") %>" src="/static/img/bb-logo.png"/>
         </a>
     </li>
     <li>
         <a target="_blank" href="https://citilab.eu">
-            <img alt="CitiLab Logo" src="/static/img/citilab-logo.png"/>
+            <img alt="<%- locale.get("static_alt_citilab_logo") %>" src="/static/img/citilab-logo.png"/>
         </a>
     </li>
 </ul>

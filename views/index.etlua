@@ -18,7 +18,7 @@
             target="<%- prefer_new_tab and '_blank' or '_self' %>"
             class="m-1 btn btn-lg btn-primary"
             ><%- locale.get('run_now',
-            '<img src="/static/img/snap-logo-white.svg" alt="Snap!" style="height: 1.5rem" />') %>
+            '<img src="/static/img/snap-logo-white.svg" alt="<%- locale.get("index_alt_snap") %>" style="height: 1.5rem" />') %>
         </a>
         <% if current_user then %>
         <a href="/my_projects" class="m-1 btn btn-lg btn-outline-success"

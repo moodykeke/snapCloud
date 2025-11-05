@@ -6,7 +6,7 @@
                 <span class="visually-hidden"><%- locale.get('search') %></span>
                 <i class="fas fa-search" aria-hidden="true"></i>
             </button>
-            <input class="form-control" type="search" placeholder="Search" aria-label="Search" name="query">
+            <input class="form-control" type="search" placeholder="<%- locale.get("partials_placeholder_search") %>" aria-label="<%- locale.get("partials_placeholder_search") %>" name="query">
         </div>
     </form>
 </div>
