@@ -407,6 +407,16 @@ local locale = {
     partials_alt_snap_build_your_own_blocks = "Snap! - Build Your Own Blocks",
     project_title_project_viewer = "project viewer",
     layout_alt_sap_logo = "SAP Logo",
+    
+    -- Admin TOTM page
+    -- ===============
+    admin_totm_title = "",
+    admin_totm_banner = "",
+    admin_totm_collection = "",
+    admin_totm_choose_file = "",
+    admin_totm_upload_banner = "",
+    admin_totm_success = "",
+    admin_totm_error = "",
 }
 
 return locale

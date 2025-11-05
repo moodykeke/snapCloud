@@ -1,21 +1,92 @@
-<% content_for('title', 'Current Topic of the Month') %>
+<% content_for('title', locale.get('admin_totm_title')) %>
 
-<h1>Current Topic of the Month</h1>
+<h1><%- locale.get('admin_totm_title') %></h1>
 
 <div class="row">
     <div class="col-md-6">
-        <h2>Banner</h2>
-        <img class="my-2 img-fluid rounded" src="/static/img/totm.png?random=<%=math.random()%>">
+        <h2><%- locale.get('admin_totm_banner') %></h2>
+        
+        <!-- Current Active Banner -->
+        <%
+        local TotmBanners = package.loaded.TotmBanners
+        local active_banner = TotmBanners:get_active_banner()
+        local all_banners = TotmBanners:get_all_banners()
+        %>
+        
+        <% if active_banner then %>
         <div class="mb-3">
+            <h5><%- locale.get('admin_totm_current_banner') %></h5>
+            <img class="img-fluid rounded" 
+                 src="/static/img/totm/<%= active_banner.filename %>?t=<%=os.time()%>" 
+                 alt="Current TOTM Banner"
+                 style="max-height: 200px;">
+            <p class="text-muted small mt-1">
+                <%= active_banner.original_name %> 
+                (<%- locale.get('admin_totm_uploaded') %> <%= active_banner.created_at %>)
+            </p>
+        </div>
+        <% else %>
+        <div class="alert alert-info">
+            <%- locale.get('admin_totm_no_active_banner') %>
+        </div>
+        <% end %>
+        
+        <!-- Upload New Banner -->
+        <div class="mb-4">
+            <h5><%- locale.get('admin_totm_upload_new') %></h5>
             <form action="totm" method="POST" enctype="multipart/form-data">
-                <label for="uploaded_file" class="visually-hidden">Choose File</label>
-                <input class="form-control" type="file" id="uploaded_file" name="uploaded_file">
-                <input value="Upload banner" type="submit" class="my-3 btn btn-success" />
+                <input class="form-control mb-2" type="file" 
+                       id="uploaded_file" name="uploaded_file" accept="image/*">
+                <input value="<%- locale.get('admin_totm_upload_banner') %>" 
+                       type="submit" class="btn btn-success" />
             </form>
         </div>
 
-        <h2>Collection</h2>
-        <select onchange="cloud.post('/set_totm', null, { id: this.value })" class="form-select">
+        <!-- Banner Library -->
+        <h5><%- locale.get('admin_totm_banner_library') %> (<%= #all_banners %>)</h5>
+        <div class="row g-2">
+        <% for _, banner in pairs(all_banners) do %>
+            <div class="col-6 col-md-4">
+                <div class="card <%= banner.is_active and 'border-primary' or '' %>">
+                    <img src="/static/img/totm/<%= banner.filename %>?t=<%=os.time()%>" 
+                         class="card-img-top" 
+                         alt="<%= banner.original_name %>"
+                         style="height: 100px; object-fit: cover; cursor: pointer;"
+                         onclick="selectBanner(<%= banner.id %>)">
+                    <div class="card-body p-2">
+                        <p class="card-text small mb-1">
+                            <%
+                            local display_name = banner.original_name or 'Unknown'
+                            local short_name = #display_name > 20 and display_name:sub(1, 20) .. '...' or display_name
+                            %>
+                            <%= short_name %>
+                        </p>
+                        <div class="btn-group btn-group-sm w-100" role="group">
+                            <button type="button" 
+                                    class="btn <%= banner.is_active and 'btn-primary' or 'btn-outline-primary' %>" 
+                                    onclick="selectBanner(<%= banner.id %>)"
+                                    <%= banner.is_active and 'disabled' or '' %>>
+                                <% if banner.is_active then %>
+                                    <%- locale.get('admin_totm_active') %>
+                                <% else %>
+                                    <%- locale.get('admin_totm_select') %>
+                                <% end %>
+                            </button>
+                            <button type="button" 
+                                    class="btn btn-outline-danger" 
+                                    onclick="deleteBanner(<%= banner.id %>)"
+                                    <%= banner.is_active and 'disabled' or '' %>>
+                                <%- locale.get('admin_totm_delete') %>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <% end %>
+        </div>
+
+        <h2 class="mt-4"><%- locale.get('admin_totm_collection') %></h2>
+        <select id="totm-collection" class="form-select">
         <%
             local current_totm = package.loaded.FeaturedCollections:find({
                 page_path = 'index',
@@ -30,3 +101,59 @@
         </select>
     </div>
 </div>
+
+<script>
+// Collection selector
+document.getElementById('totm-collection').addEventListener('change', function() {
+    var collectionId = this.value;
+    var selectElement = this;
+    
+    cloud.post(
+        '/api/set_totm',
+        function(response) {
+            alert("<%- locale.get('admin_totm_success') %>");
+        },
+        { id: collectionId },
+        function(error) {
+            alert("<%- locale.get('admin_totm_error') %>: " + (error.responseText || error));
+            selectElement.selectedIndex = selectElement.dataset.previousIndex || 0;
+        }
+    );
+    
+    selectElement.dataset.previousIndex = selectElement.selectedIndex;
+});
+
+// Banner selection
+function selectBanner(bannerId) {
+    if (confirm("<%- locale.get('admin_totm_confirm_select') %>")) {
+        cloud.post(
+            '/api/set_active_banner',
+            function(response) {
+                alert("<%- locale.get('admin_totm_banner_activated') %>");
+                location.reload();
+            },
+            { banner_id: bannerId },
+            function(error) {
+                alert("<%- locale.get('admin_totm_error') %>: " + (error.responseText || error));
+            }
+        );
+    }
+}
+
+// Banner deletion
+function deleteBanner(bannerId) {
+    if (confirm("<%- locale.get('admin_totm_confirm_delete') %>?")) {
+        cloud.post(
+            '/api/delete_banner',
+            function(response) {
+                alert("<%- locale.get('admin_totm_banner_deleted') %>");
+                location.reload();
+            },
+            { banner_id: bannerId },
+            function(error) {
+                alert("<%- locale.get('admin_totm_error') %>: " + (error.responseText || error));
+            }
+        );
+    }
+}
+</script>

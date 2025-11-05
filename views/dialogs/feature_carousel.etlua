@@ -1,11 +1,29 @@
-<% local snap_cloud = package.loaded.Users:find({ username = 'snapcloud' })%>
+<%
+    -- 获取所有已发布的集合
+    local Collections = package.loaded.Collections
+    local all_collections = Collections:select(
+        [[JOIN users ON collections.creator_id = users.id 
+          WHERE collections.published = true 
+          ORDER BY collections.updated_at DESC]],
+        { fields = 'collections.id, collections.name, users.username' }
+    )
+%>
 <form class="carousel-form">
     <div class="mb-3">
-        <p class="form-label">Select a carousel to feature:</p>
+        <p class="form-label"><%- locale.get('admin_carousel_select_label') or '选择要展示的集合：' %></p>
         <select class="form-select">
-            <% for _, each in pairs(snap_cloud:get_public_collections()) do %>
-            <option value="<%= each.id %>"><%= each.name %></option>
-            <% end %>
+            <option value="">-- <%- locale.get('admin_carousel_select_placeholder') or '请选择集合' %> --</option>
+            <% 
+                if all_collections and #all_collections > 0 then
+                    for _, each in pairs(all_collections) do 
+            %>
+            <option value="<%= each.id %>"><%= each.name %> (by <%= each.username %>)</option>
+            <%  
+                    end
+                else
+            %>
+            <option value="" disabled><%- locale.get('admin_carousel_no_collections') or '暂无可用集合' %></option>
+            <%  end %>
         </select>
     </div>
     <div class="mb-3">

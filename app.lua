@@ -86,7 +86,16 @@ app.cookie_attributes = function (self)
     -- using the Snap!Cloud will continue to extend the user's cookie. (See before_filter)
     -- Any update to `self.session.x` will extend the cookie's life.
     -- See https://httpwg.org/http-extensions/draft-ietf-httpbis-rfc6265bis.html
-    local attributes = "Domain=" .. ngx.var.host .. "; Path=/;"
+    
+    -- 不为 IP 地址设置 Domain 属性，避免 Cookie 丢失问题
+    local host = ngx.var.host
+    local attributes = "Path=/;"
+    
+    -- 只为真实域名设置 Domain 属性（不包括 localhost 和 IP 地址）
+    if host and not host:match("^%d+%.%d+%.%d+%.%d+$") and host ~= "localhost" then
+        attributes = "Domain=" .. host .. "; " .. attributes
+    end
+    
     if (config._name == 'development') then
         attributes = attributes .. " HttpOnly; SameSite=Lax; "
     else

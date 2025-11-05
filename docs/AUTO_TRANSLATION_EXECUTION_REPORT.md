@@ -26,7 +26,7 @@
 
 #### 1. 模板文件 (18 files)
 - ✅ `views/layout/navigation_bar.etlua` - 搜索框占位符
-- ✅ `views/admin/carousel_admin.etlua` - 轮播图标题
+- ✅ `views/admin/carousel_admin.etlua` - 轮播标题
 - ✅ `views/partials/slideshow.etlua` - 幻灯片alt文本
 - ✅ `views/static/partners.etlua` - 合作伙伴logo标题
 - ✅ `views/static/offline.etlua` - 离线使用说明
@@ -209,7 +209,7 @@ git push origin main
 
 ### 覆盖的页面/组件
 - 导航栏
-- 管理后台轮播图
+- 管理后台轮播
 - 合作伙伴页面
 - 离线使用说明
 - 隐私政策

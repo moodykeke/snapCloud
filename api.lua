@@ -366,6 +366,18 @@ app:match(api_route('set_totm'),
     })
 )
 
+app:match(api_route('set_active_banner'),
+    respond_to({
+        POST = SiteController.set_active_banner
+    })
+)
+
+app:match(api_route('delete_banner'),
+    respond_to({
+        POST = SiteController.delete_banner
+    })
+)
+
 app:match(api_route('feature_carousel'),
     respond_to({
         POST = SiteController.feature_carousel,

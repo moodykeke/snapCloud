@@ -24,6 +24,7 @@
 -- we store max 1000 projects per dir
 
 local xml = require("xml")
+local db = require("lapis.db")
 local config = package.loaded.config
 local yield_error = package.loaded.yield_error
 
@@ -227,10 +228,37 @@ function disk:process_thumbnails (items, id_selector)
     end
 end
 
-function disk:save_totm_banner (file)
-    local totm_file = io.open('static/img/totm.png', 'w')
+function disk:save_totm_banner (file, uploader_id)
+    local TotmBanners = package.loaded.TotmBanners
+    
+    -- Generate unique filename
+    local timestamp = os.time()
+    local extension = file.filename:match("^.+(%..+)$") or ".png"
+    local unique_filename = 'totm_' .. timestamp .. extension
+    
+    -- Ensure directory exists
+    os.execute('mkdir -p static/img/totm')
+    
+    -- Save file
+    local totm_file = io.open('static/img/totm/' .. unique_filename, 'w')
     totm_file:write(file.content)
     totm_file:close()
+    
+    -- Save to database
+    local banner = TotmBanners:create({
+        filename = unique_filename,
+        original_name = file.filename,
+        uploader_id = uploader_id,
+        created_at = db.format_date(),
+        is_active = false
+    })
+    
+    -- If this is the first banner, make it active
+    local all_banners = TotmBanners:select()
+    if #all_banners == 1 then
+        TotmBanners:set_active(banner.id)
+    end
+    
     return true
 end
 

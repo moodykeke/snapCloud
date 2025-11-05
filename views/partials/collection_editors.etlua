@@ -6,7 +6,7 @@
     <li class="editor">
         <span class="badge text-bg-primary">
             <a href="<%= editor:url_for('site') %>"
-              ><%= editor.<%- locale.get("partials_placeholder_username") %> %></a>
+              ><%= editor.username %></a>
 
             <% if current_user and
                 ((collection.creator.id == current_user.id)
@@ -45,11 +45,11 @@
         onblur="flash(this, () => { this.hidden = true });"></input>
     </span>
     <script>
-        addEditor = function (<%- locale.get("partials_placeholder_username") %>) {
+        addEditor = function (username) {
             cloud.post(
                 '/collection/<%= collection.id %>/editor',
                 Cloud.redirect,
-                { <%- locale.get("partials_placeholder_username") %>: <%- locale.get("partials_placeholder_username") %> }
+                { username: username }
             );
         };
         removeEditor = function (id) {

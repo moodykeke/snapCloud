@@ -57,10 +57,22 @@ SiteController = {
         end
     end),
     feature_carousel = capture_errors(function (self)
-        assert_min_role(self, 'moderator')
+        assert_min_role(self, 'admin')
 
         local FeaturedCollections = package.loaded.FeaturedCollections
 
+        -- 检查是否已存在
+        local existing = FeaturedCollections:find({
+            collection_id = self.params.collection_id,
+            page_path = self.params.page_path
+        })
+
+        if existing then
+            -- 如果已存在，返回成功消息（幂等操作）
+            return okResponse('collection already featured')
+        end
+
+        -- 创建新的轮播图
         FeaturedCollections:create({
             collection_id = self.params.collection_id,
             page_path = self.params.page_path,
@@ -70,7 +82,7 @@ SiteController = {
         return okResponse('collection featured')
     end),
     unfeature_carousel = capture_errors(function (self)
-        assert_min_role(self, 'moderator')
+        assert_min_role(self, 'admin')
 
         local FeaturedCollections = package.loaded.FeaturedCollections
 
@@ -104,5 +116,39 @@ SiteController = {
             })
         end
         return okResponse('totm set to ' .. self.params.id)
+    end),
+    set_active_banner = capture_errors(function (self)
+        assert_min_role(self, 'moderator')
+        
+        local TotmBanners = package.loaded.TotmBanners
+        local success = TotmBanners:set_active(self.params.banner_id)
+        
+        if success then
+            return okResponse('banner activated')
+        else
+            yield_error('Banner not found')
+        end
+    end),
+    delete_banner = capture_errors(function (self)
+        assert_min_role(self, 'moderator')
+        
+        local TotmBanners = package.loaded.TotmBanners
+        local banner = TotmBanners:find({ id = self.params.banner_id })
+        
+        if banner then
+            if banner.is_active then
+                yield_error('Cannot delete active banner')
+            end
+            
+            -- Delete file from filesystem
+            os.remove('static/img/totm/' .. banner.filename)
+            
+            -- Delete from database
+            banner:delete()
+            
+            return okResponse('banner deleted')
+        else
+            yield_error('Banner not found')
+        end
     end)
 }

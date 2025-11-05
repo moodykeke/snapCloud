@@ -465,8 +465,8 @@ app:match('admin/totm', '/totm', respond_to({
         local file = self.params.uploaded_file
         if file then
             local disk = package.loaded.disk
-            if disk:save_totm_banner(file) then
-                return { render = true }
+            if disk:save_totm_banner(file, self.current_user.id) then
+                return { redirect_to = '/totm' }
             end
         end
         return errorResponse(self)
@@ -474,7 +474,7 @@ app:match('admin/totm', '/totm', respond_to({
 }))
 
 app:get('/carousel_admin', capture_errors(function (self)
-    assert_min_role(self, 'moderator')
+    assert_min_role(self, 'admin')
     return { render = 'admin/carousel_admin' }
 end))
 

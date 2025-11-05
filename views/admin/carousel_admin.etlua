@@ -1,20 +1,20 @@
-<% content_for('title', 'Carousel Adminstration') %>
+<% content_for('title', locale.get('admin_carousel_title')) %>
 
-<h1>Carousel Administration</h1>
+<h1><%- locale.get('admin_carousel_title') %></h1>
 <%
     for _, section in ipairs({
         {
-            title = '<%- locale.get("admin_title_front_page") %>',
+            title = locale.get("admin_title_front_page"),
             query = "where page_path = 'index' and not type = 'totm'",
             page_path = 'index'
         },
         {
-            title = '<%- locale.get("admin_title_examples") %>',
+            title = locale.get("admin_title_examples"),
             query = "where page_path = 'examples'",
             page_path = 'examples'
         },
         {
-            title = '<%- locale.get("admin_title_events") %>',
+            title = locale.get("admin_title_events"),
             query = "where page_path = 'events'",
             page_path = 'events'
         },
@@ -22,49 +22,84 @@
 %>
 
     <h2><%= section.title %></h2>
-    <div class = "collection featured row">
+    <div class = "collection featured row" id="section-<%= section.page_path %>">
     <%
+        local existing_ids = {}
         for _, descriptor in
                 ipairs(package.loaded.FeaturedCollections:select(section.query))
         do
-            local collection = package.loaded.Collections:find({
-                    id = descriptor.collection_id
-            })
-            render(
-                'views.partials.collection',
-                {
-                    item = collection,
-                    items_per_row = 6,
-                    show_unfeature = true,
-                    page_path = section.page_path
-                }
-            )
+            local Collections = package.loaded.Collections
+            local Users = package.loaded.Users
+            
+            local collection = Collections:find({ id = descriptor.collection_id })
+            
+            if collection then
+                -- 记录已存在的集合ID
+                table.insert(existing_ids, collection.id)
+                
+                -- 获取集合创建者信息
+                local creator = Users:find({ id = collection.creator_id })
+                if creator then
+                    collection.username = creator.username
+                end
+                
+                render(
+                    'views.partials.collection',
+                    {
+                        item = collection,
+                        items_per_row = 6,
+                        show_unfeature = true,
+                        show_author = true,
+                        page_path = section.page_path
+                    }
+                )
+            end
         end
     %>
     </div>
     <button type="button" class='btn btn-primary'
-        onclick="addCarousel('<%= section.page_path %>')">Add Carousel</button>
+        onclick="addCarousel('<%= section.page_path %>', [<%= table.concat(existing_ids, ',') %>])"><%- locale.get('admin_carousel_add_button') %></button>
 
 <% end %>
 
 <script>
-    function addCarousel (page_path) {
+    function addCarousel (page_path, existingIds) {
         dialog(
-            "Feature a Collection",
+            "<%- locale.get('admin_carousel_dialog_title') %>",
             '<%- package.loaded.dialog('feature_carousel') %>',
             () => {
                 var form = document.querySelector('form.carousel-form');
+                var selectValue = form.querySelector('select').value;
+                if (!selectValue) {
+                    alert('<%- locale.get("admin_carousel_select_required") or "请选择一个集合" %>');
+                    return;
+                }
+                
+                // 检查是否已存在
+                if (existingIds && existingIds.includes(parseInt(selectValue))) {
+                    alert('<%- locale.get("admin_carousel_already_exists") or "该集合已经在此轮播图中" %>');
+                    return;
+                }
+                
                 cloud.post(
                     '/feature_carousel',
                     null,
                     {
                         page_path: page_path,
-                        collection_id: form.querySelector('select').value,
+                        collection_id: selectValue,
                         type: form.querySelector('input').value
+                    },
+                    () => location.reload(),
+                    (error) => {
+                        if (error && error.includes('already featured')) {
+                            alert('<%- locale.get("admin_carousel_already_exists") or "该集合已经在此轮播图中" %>');
+                        } else {
+                            alert('<%- locale.get("admin_carousel_add_error") or "添加失败，请重试" %>');
+                        }
                     }
                 );
-            }
+            },
+            () => {} // 取消按钮回调
         )
-
     }
 </script>

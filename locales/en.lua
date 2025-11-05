@@ -485,6 +485,40 @@ Want to know more? Visit @2]],
     partials_alt_snap_build_your_own_blocks = "Snap! - Build Your Own Blocks",
     project_title_project_viewer = "project viewer",
     layout_alt_sap_logo = "SAP Logo",
+    
+    -- Admin TOTM page
+    -- ===============
+    admin_totm_title = "Current Topic of the Month",
+    admin_totm_banner = "Banner",
+    admin_totm_collection = "Collection",
+    admin_totm_choose_file = "Choose File",
+    admin_totm_upload_banner = "Upload banner",
+    admin_totm_success = "Topic of the Month updated successfully!",
+    admin_totm_error = "Failed to update Topic of the Month",
+    admin_totm_current_banner = "Current Active Banner",
+    admin_totm_uploaded = "Uploaded",
+    admin_totm_no_active_banner = "No active banner set. Please upload and select one.",
+    admin_totm_upload_new = "Upload New Banner",
+    admin_totm_banner_library = "Banner Library",
+    admin_totm_active = "Active",
+    admin_totm_select = "Select",
+    admin_totm_delete = "Delete",
+    admin_totm_confirm_select = "Set this banner as active?",
+    admin_totm_confirm_delete = "Delete banner",
+    admin_totm_banner_activated = "Banner activated successfully!",
+    admin_totm_banner_deleted = "Banner deleted successfully!",
+    
+    -- Admin Carousel page
+    -- ===================
+    admin_carousel_title = "Carousel Administration",
+    admin_carousel_add_button = "Add Carousel",
+    admin_carousel_dialog_title = "Feature a Collection",
+    admin_carousel_select_label = "Select a collection to feature:",
+    admin_carousel_select_placeholder = "Please select a collection",
+    admin_carousel_select_required = "Please select a collection",
+    admin_carousel_no_collections = "No collections available",
+    admin_carousel_already_exists = "This collection is already featured in this carousel",
+    admin_carousel_add_error = "Failed to add carousel, please try again",
 }
 
 return locale

@@ -358,4 +358,18 @@ return {
         )
     end,
 
+    -- Create totm_banners table for managing multiple TOTM banners
+    ['2025-11-05:0'] = function ()
+        schema.create_table('totm_banners', {
+            { 'id', types.serial({ primary_key = true }) },
+            { 'filename', types.text({ unique = true }) },
+            { 'original_name', types.text },
+            { 'uploader_id', types.integer },  -- 不使用 foreign_key，因为 users.id 不是主键
+            { 'created_at', types.time({ timezone = true }) },
+            { 'is_active', types.boolean({ default = false }) }
+        })
+        schema.create_index('totm_banners', 'uploader_id')
+        schema.create_index('totm_banners', 'is_active')
+    end,
+
 }

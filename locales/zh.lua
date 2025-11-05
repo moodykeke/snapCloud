@@ -19,14 +19,14 @@ local locale = {
     -- =========
     lang_name = "简体中文",
     lang_code = "zh",
-    authors = "Simon Mong, 18001767679",
+    authors = "Simon Mong, 18001767679, moodykeke@gmail.com",
     last_updated = "2022/08/11", -- YYYY/MM/DD
 
     -- Top navigation bar
     -- ==================
     -- Buttons
     run_snap = "运行 Snap@1", -- @1 becomes an italic exclamation mark (!)
-    explore = "浏览作品",
+    explore = "作品合集",
     forum = "论坛",
     join = "注册",
     login = "登录",
@@ -35,7 +35,9 @@ local locale = {
     my_collections = "我的作品集",
     my_public_page = "我的展示",
     my_profile = "我的个人主页",
-    administration = "管理",
+    administration = "管理页面",
+    followed_projects = "我关注的项目",
+    bookmarked_projects = "我收藏的项目",
     logout = "退出登录",
     Learn = "学习",
     -- This option lets admins go back to their admin account when they're
@@ -57,7 +59,7 @@ local locale = {
     requirements = "技术需求",
     partners = "合作伙伴",
     source = "源代码",
-    events = "",
+    events = " 活动",
     examples = "示例",
     manual = "参考手册",
     materials = "素材",
@@ -65,7 +67,7 @@ local locale = {
     research = "探索",
     offline = "离线版本",
     extensions = "模块/包",
-    old_snap = "",
+    old_snap = "旧版 Snap",
     -- forum already translated in top navigation bar
     contact = "联系我们",
     mirrors = "镜像",
@@ -76,48 +78,48 @@ local locale = {
     -- Index page
     -- ==========
     welcome = "欢迎使用Snap@1", -- @1 becomes an italic exclamation mark (!)
-    welcome_logged_in = "", -- @1 becomes the current user username
-    snap_description = "Snap@1是一种对儿童和成人具有广泛吸引力的编程语言，同时也是重要的计算机科学学习平台",
+    welcome_logged_in = "欢迎回来，@1", -- @1 becomes the current user username
+    snap_description = "Snap@1是一种对儿童和成人具有广泛吸引力的编程语言，同时也是重要的计算机科学学习平台。",
     -- Buttons
-    run_now = "立即运行",
+    run_now = "运行 @1",
     -- examples and manual already translated in Footer
     -- Curated Collections
     featured = "精选项目",
-    totm = "", -- @1 becomes the actual topic of the month
+    totm = "本月主题", -- @1 becomes the actual topic of the month
     science = "科学作品",
-    simulations = "",
-    three_d = "",
-    music = "",
+    simulations = "模拟作品",
+    three_d = "3D作品",
+    music = "音乐作品",
     art = "艺术作品",
     fractals = "分形艺术作品",
-    animations = "",
+    animations = "动画作品",
     games = "游戏作品",
-    cs = "",
-    maths = "",
+    cs = "计算机科学",
+    maths = "数学",
     latest = "最新项目",
-    more_collections = "",
+    more_collections = "更多作品集",
 
     -- Events page
-    events_title = "",
+    events_title = "活动",
 
     -- Collections page
-    collections_title = "",
+    collections_title = "作品集",
 
     -- User Collections page
-    user_collections_title = "",
+    user_collections_title = "我的作品集",
 
     -- User Projects page
-    user_projects_title = "",
+    user_projects_title = "我的作品",
 
     -- Sign up page
     -- ============
-    signup_title = "创建Snap@1账号", -- @1 becomes an italic exclamation mark (!)
+    signup_title = "创建 Snap@1 账号", -- @1 becomes an italic exclamation mark (!)
     username = "用户名称",
     password = "密码",
     password_2 = "再次输入密码",
-    birth_month = "",
-    or_before = "", -- is preceded by a year, like "1995 or before"
-    email_parent = "",
+    birth_month = "出生月份",
+    or_before = "或者之前", -- is preceded by a year, like "1995 or before"
+    email_parent = "父母或监护人的邮件地址",
     email_user = "邮件地址",
     email_2 = "再次输入邮件地址",
     tos_agree = "", -- @1 becomes Terms of Service, @2 becomes Privacy Agreement
@@ -129,114 +131,130 @@ local locale = {
     -- ===========
     log_into_snap = "登录到Snap@1", -- @1 becomes an italic exclamation mark (!)
     keep_logged_in = "保持登录状态",
-    i_forgot_password = "",
-    i_forgot_username = "",
+    i_forgot_password = "忘记密码",
+    i_forgot_username = "忘记用户名",
 
     -- Dates
     -- =====
     -- Month names
-    january = "",
-    february = "",
-    march = "",
-    april = "",
-    may = "",
-    june = "",
-    july = "",
-    august = "",
-    september = "",
-    october = "",
-    november = "",
-    december = "",
+    january = "一月",
+    february = "二月",
+    march = "三月",
+    april = "四月",
+    may = "五月",
+    june = "六月",
+    july = "七月",
+    august = "八月",
+    september = "九月",
+    october = "十月",
+    november = "十一月",
+    december = "十二月",
     -- Date format
-    date = "", -- @1 is the day, @2 is the month name, @3 is the year
+    date = "@1 @2 @3", -- @1 is the day, @2 is the month name, @3 is the year
 
     -- Generic dialogs
     -- ===============
     ok = "确定",
     cancel = "取消",
-    confirm = "",
+    confirm = "确认",
 
     -- Explore page
     -- ============
-    published_projects = "",
-    published_collections = "",
+    published_projects = "已发布项目",
+    published_collections = "已发布作品集",
+
+    -- Learn Snap! Page
+    -- ==============
+    learn_snap = "学习 @1", -- @1 becomes Snap!
 
     -- Search results page
     -- ===================
-    search_results = "",
-    project_search_results = "",
-    collection_search_results = "",
-    user_search_results = "",
+    search_results = "搜索结果",
+    project_search_results = "项目搜索结果",
+    collection_search_results = "作品集搜索结果",
+    user_search_results = "用户搜索结果",
     projects = "项目",
     collections = "作品集",
     users = "用户",
 
     -- Users page
     -- ==========
-    last_users = "",
+    last_users = "最近的用户",
 
     -- Search component in grids
     -- =========================
-    matching = "", -- @1 becomes the search term
+    matching = "匹配", -- @1 becomes the search term
 
     -- My Collections page
     -- ===================
     -- Buttons
     new_collection = "新的作品集",
     -- New collection dialog
-    collection_name = "",
-    collection_by_thumb = "", -- @1 is the author's username
-
+    collection_name = "作品集名称",
+    collection_by_thumb = "作者: @1", -- @1 is the author's username
     -- Collection page
     -- ===============
-    collection_by = "", -- @1 is the author's username
+    collection_by = "作者: @1", -- @1 is the author's username
     -- Dates
-    collection_created_date = "",
-    collection_updated_date = "",
-    collection_shared_date = "",
-    collection_published_date = "",
+    collection_created_date = "创建日期: @1",
+    collection_updated_date = "更新日期: @1",
+    collection_shared_date = "分享日期: @1",
+    collection_published_date = "发布日期: @1",
     -- Buttons
     share_collection_button = "分享",
     unshare_collection_button = "取消分享",
     publish_collection_button = "发布",
     unpublish_collection_button = "取消发布",
-    delete_collection_button = "",
-    make_ffa = "",
-    unmake_ffa = "",
-    unenroll = "",
+    delete_collection_button = "删除",
+    make_ffa = "免费访问",
+    unmake_ffa = "取消免费访问",
+    unenroll = "取消注册",
     -- Project Thumbnail
-    project_by_thumb = "", -- @1 is the author's username
-    item_shared_info = "",
-    item_not_shared_info = "",
-    item_published_info = "",
-    item_not_published_info = "",
-    confirm_uncollect = "", -- @1 becomes a new line. You can add as many as you need.
-    remove_from_collection_tooltip = "",
-    collection_thumbnail_tooltip = "",
+    project_by_thumb = "作者: @1", -- @1 is the author's username
+    item_shared_info = "已分享",
+    item_not_shared_info = "未分享",
+    item_published_info = "已发布",
+    item_not_published_info = "未发布",
+    confirm_uncollect = "确认从作品集中移除？", -- @1 becomes a new line. You can add as many as you need.
+    remove_from_collection_tooltip = "从作品集中移除",
+    collection_thumbnail_tooltip = "点击以查看作品集",
 
     -- Collection dialogs
     -- ==================
-    confirm_share_collection = "",
-    confirm_unshare_collection = "",
-    confirm_publish_collection = "",
-    confirm_unpublish_collection = "",
-    confirm_ffa = "", -- @1 becomes a new line. You can add as many as you need.
-    confirm_unffa = "", -- @1 becomes a new line. You can add as many as you need.
+    confirm_share_collection = "确认要分享这个作品集吗？",
+    confirm_unshare_collection = "确认要取消分享这个作品集吗？",
+    confirm_publish_collection = "确认要发布这个作品集吗？",
+    confirm_unpublish_collection = "确认要取消发布这个作品集吗？",
+    confirm_ffa = "确认要设置为免费访问吗？", -- @1 becomes a new line. You can add as many as you need.
+    confirm_unffa = "确认要取消免费访问吗？", -- @1 becomes a new line. You can add as many as you need.
     confirm_unenroll = "",
 
+    -- Followed users feed
+    -- ===================
+    followed_feed = "我关注的用户的项目",
+    following_nobody = "您还没有关注任何用户。访问用户的公开页面并点击 @1 以关注他们，然后在此页面查看他们最新的公开项目。",
+    followed_users = "您关注的用户",
+    follower_users = "关注您的用户",
+
+    -- Bookmarked projects feed
+    -- ========================
+    bookmarked_feed = "我收藏的项目",
+    no_bookmarks = "您还没有收藏任何项目。点击您喜欢的项目下方的心形图标以收藏它。",
+    recent_bookmarks = "最近收藏的项目",
+
     -- User public page
-    -- ================
-    public_page = "", -- @1 becomes the user's username
+    -- ================================
+    public_page = "用户页面: @1", -- @1 becomes the user's username
     -- Admin tools
     admin_tools = "管理工具",
-    latest_published_projects = "",
-    latest_published_collections = "",
+    latest_published_projects = "最新发布的项目",
+    latest_published_collections = "最新发布的作品集",
 
     -- User profile
     -- ============
-    profile_title = "", -- @1 becomes the user's username
-    join_date = "", -- date of user creation follows
-    email = "",
+    profile_title = "用户资料: @1", -- @1 becomes the user's username
+    join_date = "加入日期", -- date of user creation follows
+    email = "邮箱",
     role = "角色",
     -- User roles
     standard = "标准的",
@@ -251,31 +269,31 @@ local locale = {
 
     -- Project page
     -- ============
-    remixed_from = "", -- @1 is the original project name, @2 is its author's username
-    project_by = "", -- @1 is the username
-    project_remixes_title = "",
-    project_collections_title = "",
-    shift_enter_note = "", -- in the notes field
+    remixed_from = "从 @1 (作者: @2) 混合而来", -- @1 is the original project name, @2 is its author's username
+    project_by = "作者: @1", -- @1 is the username
+    project_remixes_title = "项目混合",
+    project_collections_title = "项目作品集",
+    shift_enter_note = "按 Shift+Enter 换行", -- in the notes field
     no_notes = "这个项目没有说明",
-    created_date = "",
-    updated_date = "",
-    shared_date = "",
-    published_date = "",
+    created_date = "创建日期",
+    updated_date = "更新日期",
+    shared_date = "分享日期",
+    published_date = "发布日期",
     -- Buttons
-    see_code = "",
+    see_code = "查看代码",
     edit = "编辑",
     download = "下载",
     embed = "嵌入",
     collect = "添加至作品集",
-    delete_button = "",
-    publish_button = "",
-    share_button = "",
-    unpublish_button = "",
-    unshare_button = "",
+    delete_button = "删除",
+    publish_button = "发布",
+    share_button = "分享",
+    unpublish_button = "取消发布",
+    unshare_button = "取消分享",
     -- Flagging
-    you_flagged = "",
-    unflag_project = "",
-    flag_project = "",
+    you_flagged = "您已举报此项目",
+    unflag_project = "取消举报",
+    flag_project = "举报",
 
     -- Embed dialog
     -- ============
@@ -284,42 +302,42 @@ local locale = {
     project_title = "项目标题",
     project_author = "项目作者",
     edit_button = "编辑按钮",
-    pause_button = "",
-    embed_url = "",
-    embed_code = "",
+    pause_button = "暂停按钮",
+    embed_url = "嵌入链接",
+    embed_code = "嵌入代码",
 
     -- Collect dialog
     -- ==============
-    collect_title = "",
-    collect_explanation = "",
+    collect_title = "添加至作品集",
+    collect_explanation = "请选择您想添加到的作品集:",
 
     -- Delete project dialog
     -- =====================
     confirm_delete_project = "确认要删除这个项目么？",
-    confirm_delete_user = "",
-    confirm_delete_collection = "",
+    confirm_delete_user = "确认要删除这个用户么？",
+    confirm_delete_collection = "确认要删除这个作品集么？",
 
     -- Share/unshare and publish/unpublish dialogs
     -- ===========================================
     confirm_share_project = "确认要分享这个项目么？",
-    confirm_unshare_project = "",
-    confirm_publish_project = "",
-    confirm_unpublish_project = "",
+    confirm_unshare_project = "确认要取消分享这个项目么？",
+    confirm_publish_project = "确认要发布这个项目么？",
+    confirm_unpublish_project = "确认要取消发布这个项目么？",
 
     -- Flag project dialogs
     -- ====================
     flag_prewarning = "", -- @1 becomes a new line. You can add as many as you need.
-    choose_flag_reason = "",
-    flag_reason_hack = "",
-    flag_reason_coc = "",
-    flag_reason_dmca = "",
-    flag_reason_notes = "",
-    flag_reason_notes_placeholder = "",
+    choose_flag_reason = "选择举报原因",
+    flag_reason_hack = "恶意修改",
+    flag_reason_coc = "违反社区准则",
+    flag_reason_dmca = "侵犯版权",
+    flag_reason_notes = "其他原因",
+    flag_reason_notes_placeholder = "请输入其他原因",
 
     -- User admin component
     -- ====================
-    user_id = "",
-    project_count = "",
+    user_id = "用户ID",
+    project_count = "项目数量",
     -- Buttons
     become = "成为", -- as an admin, temporarily impersonate this user
     change_email = "更改邮箱",
@@ -328,15 +346,14 @@ local locale = {
     unban = "",
     delete_usr = "删除",
     -- New email dialog
-    new_email = "",
+    new_email = "新邮箱地址",
     -- Send message dialog
-    compose_email = "",
-    msg_subject = "",
-    msg_body = "",
-
+    compose_email = "撰写邮件",
+    msg_subject = "邮件主题",
+    msg_body = "邮件正文",
     -- Delete user dialog
     -- ==================
-    confirm_delete_usr = "",
+    confirm_delete_usr = "确认要删除这个用户么？",
     warning_no_return = "注意！这个操作无法被撤销！",
 
     -- Change password page
@@ -352,16 +369,21 @@ local locale = {
 
     -- Administration page
     -- ===================
+    carousel_admin = "轮播管理",
     user_admin = "用户管理",
-    zombie_admin = "",
+    zombie_admin = "僵尸项目管理",
     flagged_projects = "被举报的项目",
+    suspicious_ips = "可疑IP地址",
+    -- user page
+    -- ===================    
+    follow_user = "关注用户",
 
     -- Error messages
     -- ==============
     err_login_failed = "登录失败",
-    err_password_mismatch = "", -- @1 becomes a new line. Feel free to move it around to where it best fits your locale. You can also add additional new lines by inserting a new @1 where needed.
-    err_password_mismatch_title = "",
-    err_email_mismatch = "", -- @1 becomes a new line. Feel free to move it around to where it best fits your locale. You can also add additional new lines by inserting a new @1 where needed.
+    err_password_mismatch = "密码不匹配", -- @1 becomes a new line. Feel free to move it around to where it best fits your locale. You can also add additional new lines by inserting a new @1 where needed.
+    err_password_mismatch_title = "密码不匹配",
+    err_email_mismatch = "邮箱不匹配", -- @1 becomes a new line. Feel free to move it around to where it best fits your locale. You can also add additional new lines by inserting a new @1 where needed.
     err_email_mismatch_title = "邮箱不匹配",
 
     -- Auto-generated
@@ -379,7 +401,7 @@ local locale = {
     static_alt_snap4arduino_logo = "Snap4Arduino Logo",
     partials_alt_collection_thumbnail = "collection thumbnail",
     partials_alt_snap_no_ceiling = "Snap! - No Ceiling",
-    admin_title_front_page = "Front Page",
+    admin_title_front_page = "首页",
     static_alt_implementation_of_the_for_block_in_snap = "implementation of the for block in Snap!",
     static_alt_snap = "Snap!",
     static_alt_microsoft_teals_logo = "Microsoft TEALS logo",
@@ -388,13 +410,13 @@ local locale = {
     embed_title_see_source_code = "See source code",
     partials_title_this_item_itemshared_and = "This item <%= item.shared and",
     layout_alt_uc_berkeley_logo = "UC Berkeley Logo",
-    admin_title_events = "Events",
+    admin_title_events = "活动",
     static_alt_miosoft_logo = "Miosoft Logo",
     index_alt_snap = "Snap!",
     layout_placeholder_search = "搜索",
     static_alt_turtlestitch_logo = "TurtleStitch Logo",
     static_alt_microblocks_logo = "microblocks logo",
-    admin_title_examples = "Examples",
+    admin_title_examples = "示例",
     partials_alt_view_topic_of_the_month = "View Topic of the Month",
     static_alt_bjc_logo = "BJC Logo",
     partials_placeholder_username = "用户名",
@@ -403,6 +425,40 @@ local locale = {
     partials_alt_snap_build_your_own_blocks = "Snap! - Build Your Own Blocks",
     project_title_project_viewer = "project viewer",
     layout_alt_sap_logo = "SAP Logo",
+    
+    -- Admin TOTM page
+    -- ===============
+    admin_totm_title = "当前月度主题",
+    admin_totm_banner = "横幅图片",
+    admin_totm_collection = "作品集",
+    admin_totm_choose_file = "选择文件",
+    admin_totm_upload_banner = "上传横幅",
+    admin_totm_success = "月度主题更新成功！",
+    admin_totm_error = "月度主题更新失败",
+    admin_totm_current_banner = "当前激活的横幅",
+    admin_totm_uploaded = "上传于",
+    admin_totm_no_active_banner = "未设置激活的横幅。请上传并选择一个。",
+    admin_totm_upload_new = "上传新横幅",
+    admin_totm_banner_library = "横幅库",
+    admin_totm_active = "已激活",
+    admin_totm_select = "选择",
+    admin_totm_delete = "删除",
+    admin_totm_confirm_select = "将此横幅设为激活状态？",
+    admin_totm_confirm_delete = "删除横幅",
+    admin_totm_banner_activated = "横幅激活成功！",
+    admin_totm_banner_deleted = "横幅删除成功！",
+    
+    -- Admin Carousel page
+    -- ===================
+    admin_carousel_title = "轮播图管理",
+    admin_carousel_add_button = "添加轮播图",
+    admin_carousel_dialog_title = "精选作品集",
+    admin_carousel_select_label = "选择要展示的集合：",
+    admin_carousel_select_placeholder = "请选择集合",
+    admin_carousel_select_required = "请选择一个集合",
+    admin_carousel_no_collections = "暂无可用集合",
+    admin_carousel_already_exists = "该集合已经在此轮播图中",
+    admin_carousel_add_error = "添加失败，请重试",
 }
 
 return locale

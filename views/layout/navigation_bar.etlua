@@ -22,18 +22,18 @@
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link forum" href="https://forum.snap.berkeley.edu/">
+          <a class="nav-link forum" href="https://10.120.27.211:8001">
             <%- locale.get('forum') %>
           </a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="/learn">
-            Learn
+            <%- locale.get('Learn') %>
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" target="_blank" href="https://www.snapcon.org">
-            Snap<em>!</em>Con
+          <a class="nav-link" target="_blank" href="https://10.120.27.211:8002">
+            更多资源
           </a>
         </li>
       </ul>

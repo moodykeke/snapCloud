@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "*.etlua": "html"
+    },
+    "[html]": {
+        "editor.suggest.insertMode": "replace"
+    },
+    "javascript.validate.enable": false,
+    "html.validate.scripts": false,
+    "html.validate.styles": false
+}

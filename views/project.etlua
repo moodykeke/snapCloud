@@ -13,7 +13,7 @@
                 locale.get(
                     'project_by',
                     '<a href="' .. project:url_for('author') ..
-                        '"target=""><strong>' .. project.username .. '</strong></a>'
+                        '"><strong>' .. project.username .. '</strong></a>'
                 )
             %></div>
             <% if remixed_from then %>
