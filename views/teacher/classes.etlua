@@ -13,15 +13,19 @@ async function loadClasses() {
         const response = await fetch('/api/v1/classes');
         const data = await response.json();
         
-        if (data.success) {
+        console.log('API response:', data);
+        
+        if (data.success && Array.isArray(data.classes)) {
             classes = data.classes;
             renderClasses();
+        } else if (data.errors) {
+            showError(data.errors[0] || '加载班级失败');
         } else {
             showError('加载班级失败');
         }
     } catch (error) {
         console.error('Error:', error);
-        showError('加载班级失败');
+        showError('加载班级失败: ' + error.message);
     }
 }
 

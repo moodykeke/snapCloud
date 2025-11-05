@@ -45,14 +45,22 @@ ClassController = {
             yield_error('请先登录')
         end
         
-        if not self.current_user.is_teacher then
+        if not self.current_user.is_teacher and not self.current_user:isadmin() then
             yield_error('只有教师可以查看班级')
         end
         
-        local classes = Collections:select(
-            'WHERE creator_id = ? AND is_class = true ORDER BY created_at DESC',
-            self.current_user.id
-        )
+        -- 管理员可以查看所有班级，教师只能查看自己的班级
+        local classes
+        if self.current_user:isadmin() then
+            classes = Collections:select(
+                'WHERE is_class = true ORDER BY created_at DESC'
+            )
+        else
+            classes = Collections:select(
+                'WHERE creator_id = ? AND is_class = true ORDER BY created_at DESC',
+                self.current_user.id
+            )
+        end
         
         for _, class in ipairs(classes) do
             local stats = db.query([[
@@ -81,7 +89,8 @@ ClassController = {
             yield_error('班级不存在')
         end
         
-        if class.creator_id ~= self.current_user.id then
+        -- 管理员可以查看所有班级，教师只能查看自己的班级
+        if not self.current_user:isadmin() and class.creator_id ~= self.current_user.id then
             yield_error('无权查看此班级')
         end
         
@@ -105,8 +114,9 @@ ClassController = {
             yield_error('班级不存在')
         end
         
-        if class.creator_id ~= self.current_user.id then
-            yield_error('无权修改此班级')
+        -- 管理员可以编辑所有班级
+        if not self.current_user:isadmin() and class.creator_id ~= self.current_user.id then
+            yield_error('无权编辑此班级')
         end
         
         local updates = { updated_at = db.raw("now()") }
@@ -124,7 +134,7 @@ ClassController = {
         return jsonResponse({ success = true, class = class })
     end),
     
-    -- 删除班级
+    -- 删除班级（软删除）
     delete_class = capture_errors(function (self)
         if not self.current_user then
             yield_error('请先登录')
@@ -135,7 +145,8 @@ ClassController = {
             yield_error('班级不存在')
         end
         
-        if class.creator_id ~= self.current_user.id then
+        -- 管理员可以删除所有班级
+        if not self.current_user:isadmin() and class.creator_id ~= self.current_user.id then
             yield_error('无权删除此班级')
         end
         
@@ -170,7 +181,8 @@ ClassController = {
             yield_error('班级不存在')
         end
         
-        if class.creator_id ~= self.current_user.id then
+        -- 管理员可以查看所有班级成员
+        if not self.current_user:isadmin() and class.creator_id ~= self.current_user.id then
             yield_error('无权查看此班级成员')
         end
         
@@ -194,7 +206,8 @@ ClassController = {
             yield_error('班级不存在')
         end
         
-        if class.creator_id ~= self.current_user.id then
+        -- 管理员可以管理所有班级成员
+        if not self.current_user:isadmin() and class.creator_id ~= self.current_user.id then
             yield_error('无权添加成员')
         end
         
@@ -232,7 +245,8 @@ ClassController = {
             yield_error('班级不存在')
         end
         
-        if class.creator_id ~= self.current_user.id then
+        -- 管理员可以管理所有班级成员
+        if not self.current_user:isadmin() and class.creator_id ~= self.current_user.id then
             yield_error('无权添加成员')
         end
         
@@ -257,7 +271,8 @@ ClassController = {
             yield_error('班级不存在')
         end
         
-        if class.creator_id ~= self.current_user.id then
+        -- 管理员可以管理所有班级成员
+        if not self.current_user:isadmin() and class.creator_id ~= self.current_user.id then
             yield_error('无权移除成员')
         end
         
@@ -285,7 +300,8 @@ ClassController = {
             yield_error('班级不存在')
         end
         
-        if class.creator_id ~= self.current_user.id then
+        -- 管理员可以管理所有班级成员
+        if not self.current_user:isadmin() and class.creator_id ~= self.current_user.id then
             yield_error('无权修改成员状态')
         end
         
