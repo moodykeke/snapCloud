@@ -142,6 +142,19 @@ app:post(api_route('users/current/nickname'), capture_errors(function (self)
     end
 end))
 
+-- Update real name
+app:post(api_route('users/current/realname'), capture_errors(function (self)
+    assert_exists(self.current_user)
+    
+    local real_name = self.params.real_name
+    if real_name and real_name ~= '' then
+        self.current_user:update({ real_name = real_name })
+        return jsonResponse({ success = true, real_name = real_name })
+    else
+        return jsonResponse({ success = false, error = '真实姓名不能为空' })
+    end
+end))
+
 app:match(api_route('users/:username/newpassword'), respond_to({
     POST = capture_errors(function (self)
         self.params.old_password = self.params.oldpassword

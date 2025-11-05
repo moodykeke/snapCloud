@@ -80,6 +80,7 @@ function renderMembers() {
             <thead>
                 <tr>
                     <th><%= locale.get('student_username') %></th>
+                    <th>真实姓名</th>
                     <th>昵称</th>
                     <th><%= locale.get('student_email') %></th>
                     <th><%= locale.get('joined_at') %></th>
@@ -93,6 +94,7 @@ function renderMembers() {
                 ${members.map(member => `
                     <tr class="${!member.is_active ? 'table-secondary' : ''}">
                         <td>${escapeHtml(member.student_username)}</td>
+                        <td><strong>${escapeHtml(member.student_real_name || '-')}</strong></td>
                         <td>${escapeHtml(member.student_nickname || '-')}</td>
                         <td>${escapeHtml(member.student_email || '')}</td>
                         <td>${formatDate(member.joined_at)}</td>
@@ -162,7 +164,7 @@ function renderStudentSelector() {
     container.innerHTML = `
         <div class="mb-3">
             <input type="text" class="form-control" id="studentSearchBox" 
-                   placeholder="搜索学生（用户名、昵称或邮箱）..." 
+                   placeholder="搜索学生（用户名、真实姓名、昵称或邮箱）..." 
                    onkeyup="filterStudents()">
         </div>
         <div class="mb-2">
@@ -175,11 +177,13 @@ function renderStudentSelector() {
                 <div class="form-check student-item" 
                      data-username="${escapeHtml(s.username).toLowerCase()}" 
                      data-nickname="${escapeHtml(s.nickname || '').toLowerCase()}"
+                     data-realname="${escapeHtml(s.real_name || '').toLowerCase()}"
                      data-email="${escapeHtml(s.email || '').toLowerCase()}">
                     <input class="form-check-input student-checkbox" type="checkbox" 
                            value="${s.id}" id="student_${s.id}" onchange="updateSelectedCount()">
                     <label class="form-check-label" for="student_${s.id}">
                         ${escapeHtml(s.username)} 
+                        ${s.real_name ? `<span class="badge bg-success">${escapeHtml(s.real_name)}</span>` : ''}
                         ${s.nickname ? `<span class="badge bg-info">${escapeHtml(s.nickname)}</span>` : ''}
                         ${s.email ? `<small class="text-muted">(${escapeHtml(s.email)})</small>` : ''}
                     </label>
@@ -199,9 +203,11 @@ function filterStudents() {
     studentItems.forEach(item => {
         const username = item.dataset.username;
         const nickname = item.dataset.nickname;
+        const realname = item.dataset.realname;
         const email = item.dataset.email;
         const matches = username.includes(searchText) || 
                        nickname.includes(searchText) || 
+                       realname.includes(searchText) ||
                        email.includes(searchText);
         item.style.display = matches ? 'block' : 'none';
     });
