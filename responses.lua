@@ -58,7 +58,7 @@ end
 local html_error = function (self, error, status)
     status = status or 500
     self.locale = package.loaded.locale
-    self.locale.language = self.session.locale or 'en'
+    self.locale.language = self.session.locale or 'zh'
     self.title = status .. ' Error'
     self.contents = error
     if status > 404 then

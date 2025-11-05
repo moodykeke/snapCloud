@@ -182,7 +182,7 @@ app:before_filter(function (self)
 
     -- Make locale available to all routes and templates
     self.locale = package.loaded.locale
-    self.locale.language = self.session.locale or 'en'
+    self.locale.language = self.session.locale or 'zh'
 
     self.req.source =
         (self.req.headers['content-type'] and

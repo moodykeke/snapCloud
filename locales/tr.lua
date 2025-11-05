@@ -361,7 +361,7 @@ local locale = {
     err_password_mismatch = "", -- @1 becomes a new line. Feel free to move it around to where it best fits your locale. You can also add additional new lines by inserting a new @1 where needed.
     err_password_mismatch_title = "",
     err_email_mismatch = "", -- @1 becomes a new line. Feel free to move it around to where it best fits your locale. You can also add additional new lines by inserting a new @1 where needed.
-    err_email_mismatch_title = "E-postalar uyuşmuyor",,
+    err_email_mismatch_title = "E-postalar uyuşmuyor",
 
     -- Auto-generated
     partials_alt_snap_wide_walls = "Snap! - Wide Walls",

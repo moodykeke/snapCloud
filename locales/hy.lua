@@ -410,7 +410,7 @@ local locale = {
     err_password_mismatch = "Խնդրում ենք համոզվել, որ երկու անգամ մուտքագրել եք your@1password, և որ երկու գաղտնաբառերն էլ համընկնում են:", -- @1 becomes a new line. Feel free to move it around to where it best fits your locale. You can also add additional new lines by inserting a new @1 where needed.
     err_password_mismatch_title = "Գաղտնաբառերը չեն համընկնում",
     err_email_mismatch = "Խնդրում ենք համոզվել, որ երկու անգամ մուտքագրել եք ձեր your@1email, և որ երկու էլ․ հասցեներն էլ համընկնում են:", -- @1 becomes a new line. Feel free to move it around to where it best fits your locale. You can also add additional new lines by inserting a new @1 where needed.
-    err_email_mismatch_title = "Էլ․ հասցեները չեն համընկնում",,
+    err_email_mismatch_title = "Էլ․ հասցեները չեն համընկնում",
 
     -- Auto-generated
     partials_alt_snap_wide_walls = "Snap! - Wide Walls",

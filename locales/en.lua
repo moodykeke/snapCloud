@@ -444,7 +444,7 @@ Want to know more? Visit @2]],
     err_password_mismatch = "Please make sure that you have entered your@1password twice, and that both passwords match.", -- @1 becomes a new line. Feel free to move it around to where it best fits your locale. You can also add additional new lines by inserting a new @1 where needed.
     err_password_mismatch_title = "Passwords do not match",
     err_email_mismatch = "Please make sure that you have entered your@1email twice, and that both emails match.", -- @1 becomes a new line. Feel free to move it around to where it best fits your locale. You can also add additional new lines by inserting a new @1 where needed.
-    err_email_mismatch_title = "Emails do not match",,
+    err_email_mismatch_title = "Emails do not match",
 
     -- Auto-generated
     partials_alt_snap_wide_walls = "Snap! - Wide Walls",

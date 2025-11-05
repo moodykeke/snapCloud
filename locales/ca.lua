@@ -366,7 +366,7 @@ local locale = {
     err_password_mismatch = "Si us plau, assegura't que has introduït correctament@1la teva contrasenya dues vegades.", -- @1 becomes a new line. Feel free to move it around to where it best fits your locale. You can also add additional new lines by inserting a new @1 where needed.
     err_password_mismatch_title = "Les contrasenyes no coincideixen",
     err_email_mismatch = "Si us plau, assegura't que has introduït correctament@1la teva adreça electrònica dues vegades.", -- @1 becomes a new line. Feel free to move it around to where it best fits your locale. You can also add additional new lines by inserting a new @1 where needed.
-    err_email_mismatch_title = "Les adreces no coincideixen",,
+    err_email_mismatch_title = "Les adreces no coincideixen",
 
     -- Auto-generated
     partials_alt_snap_wide_walls = "Snap! - Wide Walls",
