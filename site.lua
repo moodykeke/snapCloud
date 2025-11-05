@@ -35,6 +35,7 @@ local Collections = package.loaded.Collections
 local FlaggedProjects = package.loaded.FlaggedProjects
 local csrf = require("lapis.csrf")
 local assert_exists = require('validation').assert_exists
+local yield_error = package.loaded.yield_error
 local db = package.loaded.db
 
 local util = require("lib.util")
@@ -503,6 +504,66 @@ app:get('/bulk', capture_errors(function (self)
 end))
 
 app:get('/learners', capture_errors(function (self)
+    assert_exists(self.current_user)
+    if (not self.current_user.is_teacher) then
+        assert_admin(self)
+    end
+
+    self.items_per_page = 150
+    if self.current_user and self.current_user.is_teacher then
+        self.items = UserController.learners(self)
+        return { render = 'teacher/learners' }
+    else
+        return { redirect_to = self:url_for('index') }
+    end
+end))
+
+-- Assignments (作业系统)
+
+-- Teacher pages
+app:get('/teacher/assignments', capture_errors(function (self)
+    assert_exists(self.current_user)
+    if not self.current_user.is_teacher and not self.current_user:isadmin() then
+        yield_error('需要教师权限')
+    end
+    return { render = 'teacher/assignments' }
+end))
+
+app:get('/teacher/assignment/:id', capture_errors(function (self)
+    assert_exists(self.current_user)
+    if not self.current_user.is_teacher and not self.current_user:isadmin() then
+        yield_error('需要教师权限')
+    end
+    return { render = 'teacher/assignment_detail' }
+end))
+
+app:get('/teacher/grade/:submission_id', capture_errors(function (self)
+    assert_exists(self.current_user)
+    if not self.current_user.is_teacher and not self.current_user:isadmin() then
+        yield_error('需要教师权限')
+    end
+    return { render = 'teacher/grade' }
+end))
+
+-- Student pages  
+app:get('/student/assignments', capture_errors(function (self)
+    assert_exists(self.current_user)
+    if not self.current_user:is_student() then
+        yield_error('需要学生权限')
+    end
+    return { render = 'student/assignments' }
+end))
+
+app:get('/student/assignment/:id', capture_errors(function (self)
+    assert_exists(self.current_user)
+    if not self.current_user:is_student() then
+        yield_error('需要学生权限')
+    end
+    return { render = 'student/assignment_detail' }
+end))
+
+-- Old learners route
+app:get('/learners_old', capture_errors(function (self)
     assert_exists(self.current_user)
     if (not self.current_user.is_teacher) then
         assert_admin(self)

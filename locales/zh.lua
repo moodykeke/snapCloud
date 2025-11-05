@@ -459,6 +459,123 @@ local locale = {
     admin_carousel_no_collections = "暂无可用集合",
     admin_carousel_already_exists = "该集合已经在此轮播图中",
     admin_carousel_add_error = "添加失败，请重试",
+    
+    -- Assignment System (作业系统)
+    -- ============================
+    
+    -- Common
+    assignments = "作业",
+    assignment = "作业",
+    submissions = "提交",
+    submission = "提交",
+    due_date = "截止日期",
+    no_due_date = "无截止日期",
+    max_points = "满分",
+    points = "得分",
+    grade = "等级",
+    feedback = "反馈",
+    status = "状态",
+    version = "版本",
+    allow_late = "允许迟交",
+    
+    -- Status
+    status_draft = "草稿",
+    status_published = "已发布",
+    status_submitted = "已提交",
+    status_grading = "批改中",
+    status_graded = "已评分",
+    is_late = "迟交",
+    on_time = "按时",
+    
+    -- Teacher Pages
+    teacher_assignments = "我的作业",
+    create_assignment = "创建作业",
+    edit_assignment = "编辑作业",
+    assignment_title = "作业标题",
+    assignment_description = "作业描述",
+    template_project = "模板项目",
+    select_collection = "选择班级",
+    publish_assignment = "发布作业",
+    unpublish_assignment = "取消发布",
+    delete_assignment = "删除作业",
+    view_submissions = "查看提交",
+    grade_submissions = "批改作业",
+    assignment_stats = "作业统计",
+    total_submissions = "提交数",
+    graded_count = "已批改",
+    average_points = "平均分",
+    late_submissions = "迟交数",
+    no_assignments = "还没有创建任何作业",
+    create_first_assignment = "创建第一个作业",
+    
+    -- Student Pages  
+    student_assignments = "我的作业",
+    available_assignments = "可用作业",
+    my_submissions = "我的提交",
+    submit_assignment = "提交作业",
+    resubmit = "重新提交",
+    select_project = "选择项目",
+    student_note = "备注说明",
+    submission_time = "提交时间",
+    my_grade = "我的成绩",
+    teacher_feedback = "教师反馈",
+    no_available_assignments = "暂无可用作业",
+    not_submitted = "未提交",
+    waiting_for_grade = "等待批改",
+    
+    -- Assignment Details
+    assignment_details = "作业详情",
+    created_by = "创建者",
+    for_collection = "班级",
+    created_at = "创建时间",
+    due_at = "截止时间",
+    updated_at = "更新时间",
+    published_at = "发布时间",
+    overdue = "已过期",
+    days_left = "@1 天剩余",
+    hours_left = "@1 小时剩余",
+    
+    -- Grading
+    grade_submission = "批改提交",
+    enter_points = "输入分数",
+    enter_grade = "输入等级",
+    enter_feedback = "输入反馈",
+    save_grade = "保存评分",
+    graded_by = "批改人",
+    graded_time = "批改时间",
+    
+    -- Dialogs
+    confirm_delete_assignment = "确认删除此作业？@1所有相关的提交记录也将被删除。",
+    confirm_publish_assignment = "确认发布此作业？@1发布后学生将可以看到并提交。",
+    confirm_unpublish_assignment = "确认取消发布？@1学生将无法继续提交此作业。",
+    confirm_submit_assignment = "确认提交此作业？",
+    confirm_resubmit_assignment = "确认重新提交？@1这将创建一个新版本。",
+    
+    -- Success/Error Messages
+    assignment_created = "作业创建成功！",
+    assignment_updated = "作业更新成功！",
+    assignment_deleted = "作业已删除",
+    assignment_published = "作业已发布",
+    assignment_unpublished = "作业已取消发布",
+    submission_success = "提交成功！",
+    grade_saved = "评分已保存",
+    error_create_assignment = "创建作业失败",
+    error_update_assignment = "更新作业失败",
+    error_submit_assignment = "提交失败",
+    error_grade_submission = "保存评分失败",
+    error_no_project_selected = "请选择一个项目",
+    error_points_invalid = "分数必须在 0-@1 之间",
+    
+    -- Teacher Navigation
+    teacher_title = "教师页面",
+    bulk_tile = "批量创建用户",
+    learners_title = "学生管理",
+    assignments_title = "作业管理",
+    
+    -- Bulk creation
+    bulk_text = "上传 CSV 文件或粘贴 CSV 内容以批量创建学生账号。格式：用户名,密码",
+    bulk_make_collection = "创建班级合集",
+    bulk_create = "创建学生账号",
 }
 
 return locale

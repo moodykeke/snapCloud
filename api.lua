@@ -35,6 +35,7 @@ require 'controllers.user'
 require 'controllers.project'
 require 'controllers.collection'
 require 'controllers.site'
+require 'controllers.assignment'
 
 -- All API routes are nested under /api/v1,
 -- which is currently an optional prefix.
@@ -390,3 +391,48 @@ app:match(api_route('banned_ip/:ip'),
         DELETE = SiteController.unban_ip
     })
 )
+
+-- Assignments (作业系统)
+-- ======================
+
+-- Teacher APIs
+app:match(api_route('assignments'), respond_to({
+    GET = AssignmentController.list_teacher_assignments,
+    POST = json_params(AssignmentController.create)
+}))
+
+app:match(api_route('assignments/:id'), respond_to({
+    GET = AssignmentController.get_assignment,
+    PUT = json_params(AssignmentController.update),
+    DELETE = AssignmentController.delete
+}))
+
+app:match(api_route('assignments/:id/publish'), respond_to({
+    POST = AssignmentController.toggle_publish
+}))
+
+app:match(api_route('assignments/:assignment_id/submissions'), respond_to({
+    GET = AssignmentController.list_submissions
+}))
+
+app:match(api_route('submissions/:submission_id/grade'), respond_to({
+    POST = json_params(AssignmentController.grade_submission)
+}))
+
+-- Student APIs
+app:match(api_route('student/assignments'), respond_to({
+    GET = AssignmentController.list_student_assignments
+}))
+
+app:match(api_route('submit'), respond_to({
+    POST = json_params(AssignmentController.submit)
+}))
+
+app:match(api_route('my/submissions'), respond_to({
+    GET = AssignmentController.list_my_submissions
+}))
+
+app:match(api_route('my/stats'), respond_to({
+    GET = AssignmentController.get_my_stats
+}))
+

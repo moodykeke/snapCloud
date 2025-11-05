@@ -1,0 +1,225 @@
+<link rel="stylesheet" href="/static/style/admin.css">
+<script src="/static/js/cloud.js"></script>
+
+<h1><%- locale.get('teacher_assignments') %></h1>
+
+<div class="row mb-3">
+    <div class="col">
+        <button class="btn btn-primary" onclick="showCreateDialog()">
+            <%- locale.get('create_assignment') %>
+        </button>
+    </div>
+</div>
+
+<div id="assignments-container">
+    <p class="text-center">
+        <i class="fas fa-spinner fa-spin fa-2x"></i>
+        <br>加载中...
+    </p>
+</div>
+
+<!-- Create Assignment Dialog -->
+<div class="modal fade" id="createAssignmentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><%- locale.get('create_assignment') %></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createAssignmentForm">
+                    <div class="mb-3">
+                        <label class="form-label"><%- locale.get('assignment_title') %>*</label>
+                        <input type="text" class="form-control" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><%- locale.get('assignment_description') %></label>
+                        <textarea class="form-control" name="description" rows="4"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><%- locale.get('due_date') %></label>
+                        <input type="datetime-local" class="form-control" name="due_date">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><%- locale.get('max_points') %></label>
+                        <input type="number" class="form-control" name="max_points" value="100" min="0">
+                    </div>
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" name="published" id="publishCheck">
+                        <label class="form-check-label" for="publishCheck">
+                            <%- locale.get('publish_assignment') %>
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <%- locale.get('cancel') %>
+                </button>
+                <button type="button" class="btn btn-primary" onclick="createAssignment()">
+                    <%- locale.get('create_assignment') %>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let createModal;
+
+document.addEventListener('DOMContentLoaded', function() {
+    createModal = new bootstrap.Modal(document.getElementById('createAssignmentModal'));
+    loadAssignments();
+});
+
+function showCreateDialog() {
+    document.getElementById('createAssignmentForm').reset();
+    createModal.show();
+}
+
+async function loadAssignments() {
+    try {
+        const response = await cloud.get('/api/assignments');
+        const data = await response.json();
+        
+        if (data.assignments && data.assignments.length > 0) {
+            renderAssignments(data.assignments);
+        } else {
+            document.getElementById('assignments-container').innerHTML = `
+                <div class="alert alert-info">
+                    <%- locale.get('no_assignments') %>
+                    <br><br>
+                    <button class="btn btn-primary" onclick="showCreateDialog()">
+                        <%- locale.get('create_first_assignment') %>
+                    </button>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Failed to load assignments:', error);
+        document.getElementById('assignments-container').innerHTML = `
+            <div class="alert alert-danger">加载失败: ${error.message}</div>
+        `;
+    }
+}
+
+function renderAssignments(assignments) {
+    const html = assignments.map(assignment => {
+        const dueDate = assignment.due_date ? new Date(assignment.due_date).toLocaleString('zh-CN') : '<%- locale.get("no_due_date") %>';
+        const status = assignment.published ? '<span class="badge bg-success"><%- locale.get("status_published") %></span>' : '<span class="badge bg-secondary"><%- locale.get("status_draft") %></span>';
+        const stats = assignment.stats || {};
+        
+        return `
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        ${escapeHtml(assignment.title)}
+                        ${status}
+                    </h5>
+                    <p class="card-text">${escapeHtml(assignment.description || '')}</p>
+                    <div class="row text-muted small mb-2">
+                        <div class="col-md-6">
+                            <%- locale.get('due_date') %>: ${dueDate}
+                        </div>
+                        <div class="col-md-6">
+                            <%- locale.get('max_points') %>: ${assignment.max_points}
+                        </div>
+                    </div>
+                    <div class="row text-muted small mb-3">
+                        <div class="col-md-3">
+                            <%- locale.get('total_submissions') %>: ${stats.total_submissions || 0}
+                        </div>
+                        <div class="col-md-3">
+                            <%- locale.get('graded_count') %>: ${stats.graded_count || 0}
+                        </div>
+                        <div class="col-md-3">
+                            <%- locale.get('average_points') %>: ${(stats.average_points || 0).toFixed(1)}
+                        </div>
+                        <div class="col-md-3">
+                            <%- locale.get('late_submissions') %>: ${stats.late_submissions || 0}
+                        </div>
+                    </div>
+                    <div>
+                        <a href="/teacher/assignment/${assignment.id}" class="btn btn-sm btn-primary">
+                            <%- locale.get('view_submissions') %>
+                        </a>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="togglePublish(${assignment.id}, ${assignment.published})">
+                            ${assignment.published ? '<%- locale.get("unpublish_assignment") %>' : '<%- locale.get("publish_assignment") %>'}
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteAssignment(${assignment.id})">
+                            <%- locale.get('delete_assignment') %>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    document.getElementById('assignments-container').innerHTML = html;
+}
+
+async function createAssignment() {
+    const form = document.getElementById('createAssignmentForm');
+    const formData = new FormData(form);
+    
+    const data = {
+        title: formData.get('title'),
+        description: formData.get('description'),
+        due_date: formData.get('due_date') || null,
+        max_points: parseInt(formData.get('max_points')) || 100,
+        published: form.published.checked
+    };
+    
+    try {
+        const response = await cloud.post('/api/assignments', null, data);
+        const result = await response.json();
+        
+        if (result.assignment) {
+            createModal.hide();
+            loadAssignments();
+            alert('<%- locale.get("assignment_created") %>');
+        } else {
+            alert('<%- locale.get("error_create_assignment") %>');
+        }
+    } catch (error) {
+        console.error('Failed to create assignment:', error);
+        alert('<%- locale.get("error_create_assignment") %>: ' + error.message);
+    }
+}
+
+async function togglePublish(id, currentlyPublished) {
+    const confirmMsg = currentlyPublished ? 
+        '<%- locale.get("confirm_unpublish_assignment") %>' : 
+        '<%- locale.get("confirm_publish_assignment") %>';
+    
+    if (!confirm(confirmMsg)) return;
+    
+    try {
+        await cloud.post(`/api/assignments/${id}/publish`);
+        loadAssignments();
+    } catch (error) {
+        console.error('Failed to toggle publish:', error);
+        alert('操作失败: ' + error.message);
+    }
+}
+
+async function deleteAssignment(id) {
+    if (!confirm('<%- locale.get("confirm_delete_assignment") %>')) return;
+    
+    try {
+        await cloud.delete(`/api/assignments/${id}`);
+        loadAssignments();
+        alert('<%- locale.get("assignment_deleted") %>');
+    } catch (error) {
+        console.error('Failed to delete assignment:', error);
+        alert('删除失败: ' + error.message);
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
