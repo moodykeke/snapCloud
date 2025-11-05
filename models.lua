@@ -27,6 +27,7 @@ package.loaded.Model = require('lapis.db.model').Model
 -- In the meantime, we will require them manually
 -- return require("lapis.util").autoload("models")
 
+package.loaded.Assignments = require("models.assignments")
 package.loaded.BannedIPs = require("models.banned_ips")
 package.loaded.CollectionMemberships = require("models.collection_memberships")
 package.loaded.Collections = require("models.collections" )
@@ -36,6 +37,7 @@ package.loaded.Followers = require("models.followers" )
 package.loaded.Bookmarks = require("models.bookmarks" )
 package.loaded.Projects = require("models.projects")
 package.loaded.Remixes = require("models.remixes" )
+package.loaded.Submissions = require("models.submissions")
 package.loaded.Tokens = require("models.tokes" )
 package.loaded.TotmBanners = require("models.totm_banners" )
 package.loaded.Users = require("models.users" )

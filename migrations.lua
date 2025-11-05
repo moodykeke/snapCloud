@@ -372,4 +372,86 @@ return {
         schema.create_index('totm_banners', 'is_active')
     end,
 
+    -- Create assignments table for homework system
+    ['2025-11-05:1'] = function ()
+        schema.create_table('assignments', {
+            { 'id', types.serial({ primary_key = true }) },
+            { 'title', types.varchar({ length = 255, null = false }) },
+            { 'description', types.text },
+            { 'teacher_id', types.integer({ null = false }) },
+            { 'collection_id', types.integer },
+            { 'template_project_id', types.integer },
+            { 'created_at', types.time({ timezone = true, default = db.raw("now()") }) },
+            { 'due_date', types.time({ timezone = true }) },
+            { 'published', types.boolean({ default = false }) },
+            { 'max_points', types.integer({ default = 100 }) },
+            { 'allow_late', types.boolean({ default = true }) },
+            { 'deleted', types.boolean({ default = false }) },
+            { 'deleted_at', types.time({ timezone = true }) }
+        })
+        
+        -- Foreign keys
+        schema.add_column('assignments', 'teacher_id', 
+            types.foreign_key({ name = 'assignments_teacher_id_fkey', references = 'users', on_delete = 'CASCADE' }))
+        schema.add_column('assignments', 'collection_id',
+            types.foreign_key({ name = 'assignments_collection_id_fkey', references = 'collections', on_delete = 'SET NULL' }))
+        schema.add_column('assignments', 'template_project_id',
+            types.foreign_key({ name = 'assignments_template_project_id_fkey', references = 'projects', on_delete = 'SET NULL' }))
+        
+        -- Indexes
+        schema.create_index('assignments', 'teacher_id')
+        schema.create_index('assignments', 'collection_id')
+        schema.create_index('assignments', 'due_date')
+        schema.create_index('assignments', 'published')
+    end,
+
+    -- Create submissions table for homework system
+    ['2025-11-05:2'] = function ()
+        schema.create_table('submissions', {
+            { 'id', types.serial({ primary_key = true }) },
+            { 'assignment_id', types.integer({ null = false }) },
+            { 'student_id', types.integer({ null = false }) },
+            { 'project_id', types.integer({ null = false }) },
+            { 'submitted_at', types.time({ timezone = true, default = db.raw("now()") }) },
+            { 'is_late', types.boolean({ default = false }) },
+            { 'version', types.integer({ default = 1 }) },
+            { 'student_note', types.text },
+            { 'status', types.varchar({ length = 20, default = 'submitted' }) },
+            { 'points', types.integer },
+            { 'grade', types.varchar({ length = 10 }) },
+            { 'feedback', types.text },
+            { 'graded_at', types.time({ timezone = true }) },
+            { 'graded_by', types.integer }
+        })
+        
+        -- Foreign keys
+        schema.add_column('submissions', 'assignment_id',
+            types.foreign_key({ name = 'submissions_assignment_id_fkey', references = 'assignments', on_delete = 'CASCADE' }))
+        schema.add_column('submissions', 'student_id',
+            types.foreign_key({ name = 'submissions_student_id_fkey', references = 'users', on_delete = 'CASCADE' }))
+        schema.add_column('submissions', 'project_id',
+            types.foreign_key({ name = 'submissions_project_id_fkey', references = 'projects', on_delete = 'CASCADE' }))
+        schema.add_column('submissions', 'graded_by',
+            types.foreign_key({ name = 'submissions_graded_by_fkey', references = 'users', on_delete = 'SET NULL' }))
+        
+        -- Unique constraint
+        db.query([[
+            ALTER TABLE submissions 
+            ADD CONSTRAINT submissions_assignment_student_version_unique 
+            UNIQUE (assignment_id, student_id, version)
+        ]])
+        
+        -- Indexes
+        schema.create_index('submissions', 'assignment_id')
+        schema.create_index('submissions', 'student_id')
+        schema.create_index('submissions', 'status')
+        schema.create_index('submissions', 'project_id')
+        
+        -- Composite index for student queries
+        db.query([[
+            CREATE INDEX submissions_student_assignment_idx 
+            ON submissions(student_id, assignment_id, version DESC)
+        ]])
+    end,
+
 }
