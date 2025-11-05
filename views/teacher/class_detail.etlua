@@ -140,54 +140,121 @@ async function showAddStudentDialog() {
     }
 }
 
-// 渲染学生选择器
+// 渲染学生选择器（支持搜索和批量选择）
 function renderStudentSelector() {
-    const select = document.getElementById('studentSelector');
+    const container = document.getElementById('studentListContainer');
     const memberIds = new Set(members.map(m => m.student_id));
     
     const availableStudents = allStudents.filter(s => !memberIds.has(s.id));
     
     if (availableStudents.length === 0) {
-        select.innerHTML = '<option value="">没有可添加的学生</option>';
+        container.innerHTML = '<div class="alert alert-info">没有可添加的学生</div>';
         return;
     }
     
-    select.innerHTML = '<option value="">选择学生...</option>' +
-        availableStudents.map(s => 
-            `<option value="${s.id}">${escapeHtml(s.username)} (${escapeHtml(s.email || '')})</option>`
-        ).join('');
+    // 渲染可选学生列表
+    container.innerHTML = `
+        <div class="mb-3">
+            <input type="text" class="form-control" id="studentSearchBox" 
+                   placeholder="搜索学生（用户名或邮箱）..." 
+                   onkeyup="filterStudents()">
+        </div>
+        <div class="mb-2">
+            <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAllStudents()">全选</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAllStudents()">取消全选</button>
+            <span class="ms-2 text-muted" id="selectedCount">已选择: 0</span>
+        </div>
+        <div id="studentList" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 10px;">
+            ${availableStudents.map(s => `
+                <div class="form-check student-item" data-username="${escapeHtml(s.username).toLowerCase()}" 
+                     data-email="${escapeHtml(s.email || '').toLowerCase()}">
+                    <input class="form-check-input student-checkbox" type="checkbox" 
+                           value="${s.id}" id="student_${s.id}" onchange="updateSelectedCount()">
+                    <label class="form-check-label" for="student_${s.id}">
+                        ${escapeHtml(s.username)} 
+                        ${s.email ? `<small class="text-muted">(${escapeHtml(s.email)})</small>` : ''}
+                    </label>
+                </div>
+            `).join('')}
+        </div>
+    `;
+    
+    updateSelectedCount();
 }
 
-// 添加学生
-async function addStudent() {
-    const studentId = document.getElementById('studentSelector').value;
-    const studentNote = document.getElementById('studentNote').value.trim();
+// 搜索过滤学生
+function filterStudents() {
+    const searchText = document.getElementById('studentSearchBox').value.toLowerCase();
+    const studentItems = document.querySelectorAll('.student-item');
     
-    if (!studentId) {
+    studentItems.forEach(item => {
+        const username = item.dataset.username;
+        const email = item.dataset.email;
+        const matches = username.includes(searchText) || email.includes(searchText);
+        item.style.display = matches ? 'block' : 'none';
+    });
+}
+
+// 全选
+function selectAllStudents() {
+    const visibleCheckboxes = Array.from(document.querySelectorAll('.student-item'))
+        .filter(item => item.style.display !== 'none')
+        .map(item => item.querySelector('.student-checkbox'));
+    
+    visibleCheckboxes.forEach(cb => cb.checked = true);
+    updateSelectedCount();
+}
+
+// 取消全选
+function deselectAllStudents() {
+    document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = false);
+    updateSelectedCount();
+}
+
+// 更新选择计数
+function updateSelectedCount() {
+    const count = document.querySelectorAll('.student-checkbox:checked').length;
+    const countEl = document.getElementById('selectedCount');
+    if (countEl) {
+        countEl.textContent = `已选择: ${count}`;
+    }
+}
+
+// 添加学生（批量）
+async function addStudent() {
+    const checkboxes = document.querySelectorAll('.student-checkbox:checked');
+    const studentIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+    
+    if (studentIds.length === 0) {
         showError('<%= locale.get("please_select_student") %>');
         return;
     }
     
     try {
-        const response = await fetch(`/api/v1/classes/${classId}/members`, {
+        const response = await fetch(`/api/v1/classes/${classId}/members/batch`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ student_id: parseInt(studentId), student_note: studentNote })
+            body: JSON.stringify({ student_ids: studentIds })
         });
         
         const data = await response.json();
         
         if (data.success) {
-            showSuccess('<%= locale.get("student_added") %>');
-            bootstrap.Modal.getInstance(document.getElementById('addStudentModal')).hide();
+            showSuccess(`成功添加 ${studentIds.length} 名学生`);
+            const modalEl = document.getElementById('addStudentModal');
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
             loadMembers();
             loadClassDetails(); // 更新统计
         } else {
-            showError(data.error || '<%= locale.get("error_add_student") %>');
+            const errorMsg = data.errors ? data.errors[0] : (data.error || '<%= locale.get("error_add_student") %>');
+            showError(errorMsg);
         }
     } catch (error) {
         console.error('Error:', error);
-        showError('<%= locale.get("error_add_student") %>');
+        showError('<%= locale.get("error_add_student") %>: ' + error.message);
     }
 }
 
@@ -330,22 +397,20 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="modal-body">
                 <form id="addStudentForm">
-                    <div class="mb-3">
-                        <label for="studentSelector" class="form-label"><%= locale.get('select_student') %></label>
-                        <select class="form-select" id="studentSelector" required>
-                            <option value="">加载中...</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="studentNote" class="form-label"><%= locale.get('class_student_note') %> (<%= locale.get('optional') %>)</label>
-                        <input type="text" class="form-control" id="studentNote" 
-                               placeholder="<%= locale.get('class_student_note_placeholder') %>">
+                    <div id="studentListContainer">
+                        <div class="text-center">
+                            <div class="spinner-border spinner-border-sm" role="status">
+                                <span class="visually-hidden">加载中...</span>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= locale.get('cancel') %></button>
-                <button type="button" class="btn btn-primary" onclick="addStudent()"><%= locale.get('add') %></button>
+                <button type="button" class="btn btn-primary" onclick="addStudent()">
+                    <i class="fas fa-user-plus"></i> <%= locale.get('add') %>
+                </button>
             </div>
         </div>
     </div>

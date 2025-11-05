@@ -155,15 +155,18 @@ async function deleteClass(classId) {
         
         const data = await response.json();
         
+        console.log('Delete response:', data);
+        
         if (data.success) {
             showSuccess('<%= locale.get("class_deleted") %>');
             loadClasses();
         } else {
-            showError(data.error || '<%= locale.get("error_delete_class") %>');
+            const errorMsg = data.errors ? data.errors[0] : (data.error || '<%= locale.get("error_delete_class") %>');
+            showError(errorMsg);
         }
     } catch (error) {
-        console.error('Error:', error);
-        showError('<%= locale.get("error_delete_class") %>');
+        console.error('Delete error:', error);
+        showError('<%= locale.get("error_delete_class") %>: ' + error.message);
     }
 }
 
