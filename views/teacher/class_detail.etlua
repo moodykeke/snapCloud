@@ -1,4 +1,7 @@
-<% render("layout", { page_title = loc("class_details") }) %>
+<link rel="stylesheet" href="/static/style/admin.css">
+<script src="/static/js/cloud.js"></script>
+
+<h1><%- locale.get('class_details') %></h1>
 
 <script>
 const classId = parseInt(window.location.pathname.split('/').pop());
@@ -47,7 +50,7 @@ function renderClassInfo() {
     if (!classData) return;
     
     document.getElementById('className').textContent = classData.name;
-    document.getElementById('classDescription').textContent = classData.description || '<%= loc("no_description") %>';
+    document.getElementById('classDescription').textContent = classData.description || '<%= locale.get("no_description") %>';
     
     if (classData.stats) {
         document.getElementById('studentCount').textContent = classData.stats.active_student_count || 0;
@@ -62,7 +65,7 @@ function renderMembers() {
     if (members.length === 0) {
         container.innerHTML = `
             <div class="alert alert-info">
-                <%= loc('no_students_in_class') %>
+                <%= locale.get('no_students_in_class') %>
             </div>
         `;
         return;
@@ -72,13 +75,13 @@ function renderMembers() {
         <table class="table table-hover">
             <thead>
                 <tr>
-                    <th><%= loc('student_username') %></th>
-                    <th><%= loc('student_email') %></th>
-                    <th><%= loc('joined_at') %></th>
-                    <th><%= loc('submitted_assignments') %></th>
-                    <th><%= loc('average_points') %></th>
-                    <th><%= loc('status') %></th>
-                    <th><%= loc('actions') %></th>
+                    <th><%= locale.get('student_username') %></th>
+                    <th><%= locale.get('student_email') %></th>
+                    <th><%= locale.get('joined_at') %></th>
+                    <th><%= locale.get('submitted_assignments') %></th>
+                    <th><%= locale.get('average_points') %></th>
+                    <th><%= locale.get('status') %></th>
+                    <th><%= locale.get('actions') %></th>
                 </tr>
             </thead>
             <tbody>
@@ -91,18 +94,18 @@ function renderMembers() {
                         <td>${member.average_points ? member.average_points.toFixed(1) : '-'}</td>
                         <td>
                             ${member.is_active 
-                                ? '<span class="badge bg-success"><%= loc("active") %></span>'
-                                : '<span class="badge bg-secondary"><%= loc("inactive") %></span>'}
+                                ? '<span class="badge bg-success"><%= locale.get("active") %></span>'
+                                : '<span class="badge bg-secondary"><%= locale.get("inactive") %></span>'}
                         </td>
                         <td>
                             <button class="btn btn-sm btn-outline-secondary" 
                                     onclick="toggleMemberActive(${member.student_id})">
                                 <i class="fas fa-toggle-${member.is_active ? 'on' : 'off'}"></i>
-                                ${member.is_active ? '<%= loc("deactivate") %>' : '<%= loc("activate") %>'}
+                                ${member.is_active ? '<%= locale.get("deactivate") %>' : '<%= locale.get("activate") %>'}
                             </button>
                             <button class="btn btn-sm btn-outline-danger" 
                                     onclick="removeMember(${member.student_id}, '${escapeHtml(member.student_username)}')">
-                                <i class="fas fa-times"></i> <%= loc('remove') %>
+                                <i class="fas fa-times"></i> <%= locale.get('remove') %>
                             </button>
                         </td>
                     </tr>
@@ -155,7 +158,7 @@ async function addStudent() {
     const studentNote = document.getElementById('studentNote').value.trim();
     
     if (!studentId) {
-        showError('<%= loc("please_select_student") %>');
+        showError('<%= locale.get("please_select_student") %>');
         return;
     }
     
@@ -169,16 +172,16 @@ async function addStudent() {
         const data = await response.json();
         
         if (data.success) {
-            showSuccess('<%= loc("student_added") %>');
+            showSuccess('<%= locale.get("student_added") %>');
             bootstrap.Modal.getInstance(document.getElementById('addStudentModal')).hide();
             loadMembers();
             loadClassDetails(); // 更新统计
         } else {
-            showError(data.error || '<%= loc("error_add_student") %>');
+            showError(data.error || '<%= locale.get("error_add_student") %>');
         }
     } catch (error) {
         console.error('Error:', error);
-        showError('<%= loc("error_add_student") %>');
+        showError('<%= locale.get("error_add_student") %>');
     }
 }
 
@@ -192,20 +195,20 @@ async function toggleMemberActive(studentId) {
         const data = await response.json();
         
         if (data.success) {
-            showSuccess('<%= loc("status_updated") %>');
+            showSuccess('<%= locale.get("status_updated") %>');
             loadMembers();
         } else {
-            showError(data.error || '<%= loc("error_update_status") %>');
+            showError(data.error || '<%= locale.get("error_update_status") %>');
         }
     } catch (error) {
         console.error('Error:', error);
-        showError('<%= loc("error_update_status") %>');
+        showError('<%= locale.get("error_update_status") %>');
     }
 }
 
 // 移除学生
 async function removeMember(studentId, username) {
-    if (!confirm(`<%= loc("confirm_remove_student") %>`.replace('@1', username))) {
+    if (!confirm(`<%= locale.get("confirm_remove_student") %>`.replace('@1', username))) {
         return;
     }
     
@@ -217,15 +220,15 @@ async function removeMember(studentId, username) {
         const data = await response.json();
         
         if (data.success) {
-            showSuccess('<%= loc("student_removed") %>');
+            showSuccess('<%= locale.get("student_removed") %>');
             loadMembers();
             loadClassDetails(); // 更新统计
         } else {
-            showError(data.error || '<%= loc("error_remove_student") %>');
+            showError(data.error || '<%= locale.get("error_remove_student") %>');
         }
     } catch (error) {
         console.error('Error:', error);
-        showError('<%= loc("error_remove_student") %>');
+        showError('<%= locale.get("error_remove_student") %>');
     }
 }
 
@@ -262,7 +265,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="col">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="/teacher/classes"><%= loc('teacher_classes') %></a></li>
+                    <li class="breadcrumb-item"><a href="/teacher/classes"><%= locale.get('teacher_classes') %></a></li>
                     <li class="breadcrumb-item active" id="className">...</li>
                 </ol>
             </nav>
@@ -278,13 +281,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="col-md-4">
                     <div class="stat-box">
                         <h3 id="studentCount">0</h3>
-                        <p class="text-muted"><%= loc('students') %></p>
+                        <p class="text-muted"><%= locale.get('students') %></p>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="stat-box">
                         <h3 id="assignmentCount">0</h3>
-                        <p class="text-muted"><%= loc('assignments') %></p>
+                        <p class="text-muted"><%= locale.get('assignments') %></p>
                     </div>
                 </div>
             </div>
@@ -294,9 +297,9 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- 成员列表 -->
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0"><%= loc('class_members') %></h5>
+            <h5 class="mb-0"><%= locale.get('class_members') %></h5>
             <button class="btn btn-primary btn-sm" onclick="showAddStudentDialog()">
-                <i class="fas fa-user-plus"></i> <%= loc('add_student') %>
+                <i class="fas fa-user-plus"></i> <%= locale.get('add_student') %>
             </button>
         </div>
         <div class="card-body">
@@ -316,27 +319,27 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><%= loc('add_student') %></h5>
+                <h5 class="modal-title"><%= locale.get('add_student') %></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="addStudentForm">
                     <div class="mb-3">
-                        <label for="studentSelector" class="form-label"><%= loc('select_student') %></label>
+                        <label for="studentSelector" class="form-label"><%= locale.get('select_student') %></label>
                         <select class="form-select" id="studentSelector" required>
                             <option value="">加载中...</option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="studentNote" class="form-label"><%= loc('class_student_note') %> (<%= loc('optional') %>)</label>
+                        <label for="studentNote" class="form-label"><%= locale.get('class_student_note') %> (<%= locale.get('optional') %>)</label>
                         <input type="text" class="form-control" id="studentNote" 
-                               placeholder="<%= loc('class_student_note_placeholder') %>">
+                               placeholder="<%= locale.get('class_student_note_placeholder') %>">
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= loc('cancel') %></button>
-                <button type="button" class="btn btn-primary" onclick="addStudent()"><%= loc('add') %></button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= locale.get('cancel') %></button>
+                <button type="button" class="btn btn-primary" onclick="addStudent()"><%= locale.get('add') %></button>
             </div>
         </div>
     </div>
