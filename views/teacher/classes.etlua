@@ -123,7 +123,11 @@ async function saveEditClass() {
         
         if (data.success) {
             showSuccess('<%= locale.get("class_updated") %>');
-            bootstrap.Modal.getInstance(document.getElementById('editClassModal')).hide();
+            const modalEl = document.getElementById('editClassModal');
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
             loadClasses();
         } else {
             showError(data.error || '<%= locale.get("error_update_class") %>');
@@ -139,7 +143,8 @@ async function deleteClass(classId) {
     const cls = classes.find(c => c.id === classId);
     if (!cls) return;
     
-    if (!confirm(`<%= locale.get("confirm_delete_class") %>`.replace('@1', cls.name))) {
+    const confirmMessage = '<%= locale.get("confirm_delete_class") %>';
+    if (!confirm(confirmMessage.replace('@1', cls.name))) {
         return;
     }
     
@@ -190,7 +195,11 @@ async function createClass() {
         
         if (data.success) {
             showSuccess('<%= locale.get("class_created") %>');
-            bootstrap.Modal.getInstance(document.getElementById('createClassModal')).hide();
+            const modalEl = document.getElementById('createClassModal');
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
             loadClasses();
         } else {
             showError(data.error || '<%= locale.get("error_create_class") %>');
