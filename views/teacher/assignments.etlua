@@ -79,20 +79,32 @@ function showCreateDialog() {
 
 async function loadAssignments() {
     try {
-        const response = await cloud.get('/api/assignments');
+        const response = await fetch('/api/v1/assignments');
         const data = await response.json();
         
-        if (data.assignments && data.assignments.length > 0) {
-            renderAssignments(data.assignments);
+        console.log('Assignments API response:', data);
+        
+        if (data.success && Array.isArray(data.assignments)) {
+            if (data.assignments.length > 0) {
+                renderAssignments(data.assignments);
+            } else {
+                document.getElementById('assignments-container').innerHTML = `
+                    <div class="alert alert-info">
+                        <%- locale.get('no_assignments') %>
+                        <br><br>
+                        <button class="btn btn-primary" onclick="showCreateDialog()">
+                            <%- locale.get('create_first_assignment') %>
+                        </button>
+                    </div>
+                `;
+            }
+        } else if (data.errors) {
+            document.getElementById('assignments-container').innerHTML = `
+                <div class="alert alert-danger">加载失败: ${data.errors[0]}</div>
+            `;
         } else {
             document.getElementById('assignments-container').innerHTML = `
-                <div class="alert alert-info">
-                    <%- locale.get('no_assignments') %>
-                    <br><br>
-                    <button class="btn btn-primary" onclick="showCreateDialog()">
-                        <%- locale.get('create_first_assignment') %>
-                    </button>
-                </div>
+                <div class="alert alert-danger">加载失败</div>
             `;
         }
     } catch (error) {
@@ -171,15 +183,19 @@ async function createAssignment() {
     };
     
     try {
-        const response = await cloud.post('/api/assignments', null, data);
+        const response = await fetch('/api/v1/assignments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
         const result = await response.json();
         
-        if (result.assignment) {
+        if (result.success) {
             createModal.hide();
             loadAssignments();
             alert('<%- locale.get("assignment_created") %>');
         } else {
-            alert('<%- locale.get("error_create_assignment") %>');
+            alert(result.error || '<%- locale.get("error_create_assignment") %>');
         }
     } catch (error) {
         console.error('Failed to create assignment:', error);
@@ -195,8 +211,18 @@ async function togglePublish(id, currentlyPublished) {
     if (!confirm(confirmMsg)) return;
     
     try {
-        await cloud.post(`/api/assignments/${id}/publish`);
-        loadAssignments();
+        const response = await fetch(`/api/v1/assignments/${id}/publish`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ published: !currentlyPublished })
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            loadAssignments();
+        } else {
+            alert(result.error || '操作失败');
+        }
     } catch (error) {
         console.error('Failed to toggle publish:', error);
         alert('操作失败: ' + error.message);
@@ -207,9 +233,17 @@ async function deleteAssignment(id) {
     if (!confirm('<%- locale.get("confirm_delete_assignment") %>')) return;
     
     try {
-        await cloud.delete(`/api/assignments/${id}`);
-        loadAssignments();
-        alert('<%- locale.get("assignment_deleted") %>');
+        const response = await fetch(`/api/v1/assignments/${id}`, {
+            method: 'DELETE'
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            loadAssignments();
+            alert('<%- locale.get("assignment_deleted") %>');
+        } else {
+            alert(result.error || '删除失败');
+        }
     } catch (error) {
         console.error('Failed to delete assignment:', error);
         alert('删除失败: ' + error.message);
