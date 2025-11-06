@@ -8,8 +8,8 @@
     banned = 'danger'
 })[item.role] or 'secondary' %>
 
-<div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-3">
-  <div class="card <%- card_classes %>">
+<div class="col-12 col-md-6 col-lg-4 mb-3">
+  <div class="card <%- card_classes %>" style="min-width: 280px;">
       <div class="card-header">
           <% -- 第一行：用户名 昵称 真实姓名 账号类型 %>
           <div class="d-flex justify-content-between align-items-center flex-wrap gap-1 mb-1">
