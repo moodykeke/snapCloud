@@ -43,26 +43,23 @@
           </div>
           
           <% -- 第二行：邮箱 | 创建者（或"个人注册"） %>
-          <div class="text-muted small d-flex align-items-center flex-wrap gap-1">
+          <div class="text-muted small">
               <% if user_permissions.can_view_email(current_user, item) then %>
-              <span class="d-inline-flex align-items-center gap-1">
-                  <i class="fas fa-envelope"></i>
-                  <a href="mailto:<%= item.email %>" class="text-decoration-none text-nowrap"><%= item.email %></a>
+              <i class="fas fa-envelope"></i>
+              <span class="text-nowrap">
+                  <a href="mailto:<%= item.email %>" class="text-decoration-none"><%= item.email %></a>
               </span>
               <% if item.creator_id ~= nil or current_user:has_min_role('moderator') then %>
-              <span class="text-muted">|</span>
+              <span class="mx-2">|</span>
               <% end %>
               <% end %>
               <% if item.creator_id ~= nil then %>
-              <span class="d-inline-flex align-items-center gap-1">
                   <i class="fas fa-user-plus"></i>
-                  <span><%- locale.get('creator') %>: <a href="/user?user_id=<%= item.creator_id %>"><%= item.creator_id %></a></span>
-              </span>
+                  <%- locale.get('creator') %>: 
+                  <a href="/user?user_id=<%= item.creator_id %>"><%= item.creator_id %></a>
               <% elseif current_user:has_min_role('moderator') then %>
-              <span class="d-inline-flex align-items-center gap-1">
                   <i class="fas fa-user-check"></i>
                   <span><%- locale.get('personal_registration') %></span>
-              </span>
               <% end %>
           </div>
       </div>
