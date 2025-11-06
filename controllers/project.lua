@@ -133,7 +133,12 @@ ProjectController = {
         )
     end),
     user_projects = capture_errors(function (self)
-        if users_match(self) and not self.params.show_public then
+        -- 用户本人、管理员、版主可以看到所有项目（不仅仅是已发布的）
+        local can_see_all = (users_match(self) or 
+                            (self.current_user and self.current_user:has_min_role('moderator'))) 
+                            and not self.params.show_public
+        
+        if can_see_all then
             return ProjectController.my_projects(self)
         else
             self.params.order = 'lastupdated DESC'

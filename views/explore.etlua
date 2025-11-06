@@ -1,6 +1,12 @@
 <% if params.username then %>
-<% content_for('title', locale.get('user_projects_title', params.username)) %>
-<h1><%- locale.get('user_projects_title', params.username) %></h1>
+<%
+    -- 判断是否显示所有项目还是仅公开项目
+    local is_owner_or_admin = current_user and 
+        (current_user.username == params.username or current_user:has_min_role('moderator'))
+    local title_key = is_owner_or_admin and 'user_all_projects_title' or 'user_projects_title'
+%>
+<% content_for('title', locale.get(title_key, params.username)) %>
+<h1><%- locale.get(title_key, params.username) %></h1>
 <% elseif params.search_term then %>
 <% content_for('title', locale.get('project_search_results', params.search_term)) %>
 <h1><%- locale.get('project_search_results', params.search_term) %></h1>

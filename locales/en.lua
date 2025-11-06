@@ -116,6 +116,7 @@ local locale = {
 
     -- User Projects page
     user_projects_title = "@1's Public Projects",
+    user_all_projects_title = "@1's All Projects",
 
     -- Sign up page
     -- ============

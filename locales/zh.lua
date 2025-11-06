@@ -109,7 +109,8 @@ local locale = {
     user_collections_title = "我的作品集",
 
     -- User Projects page
-    user_projects_title = "我的作品",
+    user_projects_title = "@1 的公开作品",
+    user_all_projects_title = "@1 的所有作品",
 
     -- Sign up page
     -- ============
