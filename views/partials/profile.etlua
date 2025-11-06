@@ -162,7 +162,9 @@
                     <% end %>
                 </div>
             </li>
-        <% end %>        <% if not zombie and current_user:has_min_role('moderator') then %>
+        <% end %>
+        
+        <% if not zombie and current_user:has_min_role('moderator') then %>
         <% -- 角色和Teacher显示 - 使用权限函数判断是否可编辑 %>
         <li class="list-group-item">
             <div class="row g-2 align-items-center">

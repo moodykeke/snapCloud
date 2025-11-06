@@ -684,6 +684,7 @@ local locale = {
     reset_password = "重置密码",
     password_reset = "密码已重置",
     change_username = "更改用户名",
+    verify = "验证",
 }
 
 return locale
