@@ -47,7 +47,7 @@
               <% if user_permissions.can_view_email(current_user, item) then %>
               <i class="fas fa-envelope"></i>
               <a href="mailto:<%= item.email %>" class="text-decoration-none"><%= item.email %></a>
-              <% if item.creator_id ~= nil or current_user:has_min_role('moderator') then %>
+              <% if item.creator_id ~= nil or (current_user and current_user:has_min_role('moderator')) then %>
               <span class="mx-2">|</span>
               <% end %>
               <% end %>
@@ -55,7 +55,7 @@
                   <i class="fas fa-user-plus"></i>
                   <%- locale.get('creator') %>: 
                   <a href="/user?user_id=<%= item.creator_id %>"><%= item.creator_id %></a>
-              <% elseif current_user:has_min_role('moderator') then %>
+              <% elseif current_user and current_user:has_min_role('moderator') then %>
                   <i class="fas fa-user-check"></i>
                   <span><%- locale.get('personal_registration') %></span>
               <% end %>
@@ -74,7 +74,7 @@
             <% -- 通过检查 queried_user 来判断是否在用户详情页 %>
             <% if queried_user and queried_user.id == item.id then %>
             <li class="list-group-item">
-                <% if current_user:has_min_role('moderator') then %>
+                <% if current_user and current_user:has_min_role('moderator') then %>
                 <strong><%- locale.get('user_id') %></strong>: <%= item.id %>
                 <span class="text-muted mx-2">|</span>
                 <% end %>
@@ -87,7 +87,7 @@
             <% end %>
         
         <% -- 项目统计（权限控制） - 紧凑显示 %>
-        <% if show_project_count or current_user:has_min_role('moderator') then %>
+        <% if show_project_count or (current_user and current_user:has_min_role('moderator')) then %>
             <% local project_stats = item:get_project_stats() %>
             <li class="list-group-item">
                 <i class="fas fa-folder text-muted"></i>
@@ -124,7 +124,7 @@
         <% end %>
         
         <% -- 学生统计（班级 + 作业统计） - 紧凑显示 %>
-        <% if current_user:has_min_role('moderator') and can_view_student_stats then %>
+        <% if current_user and current_user:has_min_role('moderator') and can_view_student_stats then %>
             <% local classes = item:get_student_classes() %>
             <% local stats = item:get_assignment_stats() %>
             <li class="list-group-item">
@@ -164,7 +164,7 @@
             </li>
         <% end %>
         
-        <% if not zombie and current_user:has_min_role('moderator') then %>
+        <% if not zombie and current_user and current_user:has_min_role('moderator') then %>
         <% -- 角色和Teacher显示 - 使用权限函数判断是否可编辑 %>
         <li class="list-group-item">
             <div class="row g-2 align-items-center">
@@ -242,13 +242,13 @@
         <% if not zombie then %>
             <% -- 主要操作按钮 %>
             <div class="btn-group mb-2" role="group">
-                <% if current_user:has_min_role('admin') then %>
+                <% if current_user and current_user:has_min_role('admin') then %>
                 <a class="btn btn-sm btn-outline-secondary"
                     onclick="cloud.post('/users/<%= item.username %>/become');">
                     <i class="fas fa-user-secret"></i> <%- locale.get('become') %>
                 </a>
                 <% end %>
-                <% if current_user:has_min_role('moderator') then %>
+                <% if current_user and current_user:has_min_role('moderator') then %>
                 <a class="btn btn-sm btn-outline-info"
                     onclick="
                         dialog(
@@ -272,8 +272,8 @@
                 <% end %>
                 
                 <% -- 账户操作下拉菜单 %>
-                <% if current_user:has_min_role('moderator') or
-                        (current_user.is_teacher and item.creator_id == current_user.id) then %>
+                <% if current_user and (current_user:has_min_role('moderator') or
+                        (current_user.is_teacher and item.creator_id == current_user.id)) then %>
                 <div class="btn-group" role="group">
                     <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" 
                             data-bs-toggle="dropdown" aria-expanded="false">
@@ -336,7 +336,7 @@
                                 <i class="fas fa-user-edit"></i> <%- locale.get('change_username') %>
                             </a>
                         </li>
-                        <% if not item.verified and current_user:has_min_role('moderator') then %>
+                        <% if not item.verified and current_user and current_user:has_min_role('moderator') then %>
                         <li><hr class="dropdown-divider"></li>
                         <li>
                             <a class="dropdown-item text-success" href="#"
@@ -351,7 +351,7 @@
             </div>
             
             <% -- 危险操作按钮 %>
-            <% if current_user:has_min_role('moderator') then %>
+            <% if current_user and current_user:has_min_role('moderator') then %>
             <div class="btn-group mb-2" role="group" aria-label="unsafe actions">
                 <a class="btn btn-sm btn-outline-danger"
                     onclick="
@@ -388,7 +388,7 @@
             <% end %>
         <% else %>
             <% -- Zombie 用户操作 %>
-            <% if current_user:has_min_role('moderator') then %>
+            <% if current_user and current_user:has_min_role('moderator') then %>
             <div class="btn-group mb-2" role="group">
                 <a class="btn btn-sm btn-outline-secondary"
                     onclick="
