@@ -75,6 +75,41 @@ app:post('/api/v1/something', jsonp(function(self)
 end))
 ```
 
+### 4. 路由冲突避免
+
+**关键规则** ⚠️: API路由使用的 `api_route()` 函数会生成包含可选括号的模式，可能与页面路由冲突。
+
+**问题示例**:
+```lua
+-- api.lua中的API路由
+app:match(api_route('admin/bulk-import-users'), respond_to({...}))
+-- 生成模式: /(api/v1/)/admin/bulk-import-users
+-- 由于括号是可选的，这个模式匹配：
+--   ✅ /api/v1/admin/bulk-import-users (预期)
+--   ✅ /admin/bulk-import-users (意外！)
+
+-- site.lua中的页面路由
+app:get('/admin/bulk-import-users', ...)  -- ❌ 会被API路由拦截！
+```
+
+**解决方案**:
+1. **避免路径冲突**: 页面路由使用不同的路径
+   ```lua
+   app:get('/admin/import-users', ...)  -- ✅ 不冲突
+   ```
+
+2. **检查冲突**: 在添加新路由前，搜索是否已有类似的API路由
+   ```bash
+   grep -r "bulk-import" api.lua
+   ```
+
+3. **路由优先级**: API路由在 `api.lua` 中先加载，会优先匹配
+
+**诊断方法**:
+- 错误信息: `don't know how to respond to GET`
+- 原因: API路由的 `respond_to` 可能只定义了 POST，无法处理 GET
+- 解决: 检查 API 路由，重命名页面路由
+
 ---
 
 ## 多语言规则
