@@ -1,4 +1,4 @@
-<% render("views/partials/header", { page_title = "批量导入用户（管理员）" }) %>
+<% content_for('title', '批量导入用户（管理员）') %>
 
 <div class="container mt-4">
     <h2><i class="fas fa-users-cog"></i> 批量导入用户（管理员工具）</h2>
@@ -400,5 +400,3 @@ document.getElementById('btn_cancel').addEventListener('click', () => {
     parsedData = [];
 });
 </script>
-
-<% render("views/partials/footer") %>

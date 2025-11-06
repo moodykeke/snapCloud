@@ -1,4 +1,4 @@
-<% render("views/partials/header", { page_title = "批量导入学生" }) %>
+<% content_for('title', '批量导入学生') %>
 
 <div class="container mt-4">
     <h2><i class="fas fa-file-upload"></i> 批量导入学生</h2>
@@ -393,4 +393,5 @@ document.getElementById('btn_cancel').addEventListener('click', () => {
 loadClasses();
 </script>
 
-<% render("views/partials/footer") %>
+});
+</script>

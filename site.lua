@@ -485,6 +485,11 @@ app:get('/ip_admin', capture_errors(function (self)
     return { render = 'admin/ip_admin' }
 end))
 
+-- Test route for bulk import
+app:get('/admin/bulk-test', function (self)
+    return "Test OK"
+end)
+
 -- Teachers
 
 app:get('/teacher', capture_errors(function (self)
@@ -564,18 +569,24 @@ end))
 
 -- Teacher bulk import students
 app:get('/teacher/bulk-import-students', capture_errors(function (self)
-    assert_exists(self.current_user)
-    if not self.current_user.is_teacher and not self.current_user:isadmin() then
-        yield_error('需要教师权限')
+    if self.current_user then
+        if not self.current_user.is_teacher and not self.current_user:isadmin() then
+            yield_error('需要教师权限')
+        end
+        return { render = 'teacher/bulk_import_students' }
+    else
+        return { redirect_to = self:build_url('/') }
     end
-    return { render = 'teacher/bulk_import_students' }
 end))
 
--- Admin bulk import users
-app:get('/admin/bulk-import-users', capture_errors(function (self)
-    assert_exists(self.current_user)
-    assert_admin(self)
-    return { render = 'admin/bulk_import_users' }
+-- Admin bulk import users page
+app:get('/admin/import-users', capture_errors(function (self)
+    if self.current_user then
+        assert_admin(self)
+        return { render = 'admin/bulk_import_users' }
+    else
+        return { redirect_to = self:build_url('/') }
+    end
 end))
 
 -- Student pages  
