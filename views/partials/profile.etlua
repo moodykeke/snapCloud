@@ -43,12 +43,10 @@
           </div>
           
           <% -- 第二行：邮箱 | 创建者（或"个人注册"） %>
-          <div class="text-muted small">
+          <div class="text-muted small" style="word-break: break-all;">
               <% if user_permissions.can_view_email(current_user, item) then %>
               <i class="fas fa-envelope"></i>
-              <span class="text-nowrap">
-                  <a href="mailto:<%= item.email %>" class="text-decoration-none"><%= item.email %></a>
-              </span>
+              <a href="mailto:<%= item.email %>" class="text-decoration-none" style="word-break: break-all;"><%= item.email %></a>
               <% if item.creator_id ~= nil or current_user:has_min_role('moderator') then %>
               <span class="mx-2">|</span>
               <% end %>
