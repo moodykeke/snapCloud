@@ -654,6 +654,7 @@ local locale = {
     creator = "创建者",
     unverified = "未验证",
     more_items = "还有 @1 项",
+    total_projects = "总项目数",
     
     -- User Actions (新增字段)
     confirm_action = "确认操作",

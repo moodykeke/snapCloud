@@ -104,6 +104,28 @@ local ActiveUsers = Model:extend('active_users', {
             end
         },
     },
+    -- 获取详细的项目统计信息
+    get_project_stats = function (self)
+        local db = require('lapis.db')
+        local result = db.query([[
+            SELECT
+                COUNT(*) as total,
+                COUNT(*) FILTER (WHERE ispublic = true) as shared,
+                COUNT(*) FILTER (WHERE ispublished = true) as published
+            FROM active_projects
+            WHERE username = ?
+        ]], self.username)
+        
+        if result and #result > 0 then
+            return {
+                total = tonumber(result[1].total) or 0,
+                shared = tonumber(result[1].shared) or 0,
+                published = tonumber(result[1].published) or 0
+            }
+        end
+        
+        return { total = 0, shared = 0, published = 0 }
+    end,
     follows = function (self, a_user)
         return package.loaded.Followers:find({
             follower_id = self.id,

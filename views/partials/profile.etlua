@@ -9,7 +9,7 @@
 })[item.role] or 'secondary' %>
 
 <div class="col-12 col-sm-6 col-md-4 mb-3">
-  <div class="card <%- card_classes %>" style="min-height: 400px;">
+  <div class="card <%- card_classes %>">
       <div class="card-header">
           <% if not zombie then %>
           <a class="card-title" href="<%= item:url_for('site') %>">
@@ -19,16 +19,14 @@
           </a>
           <% end %>
           
-          <% -- 昵称显示区域（固定高度） %>
-          <div class="text-muted small mt-1" style="min-height: 20px;">
-            <% if item.nickname and item.nickname ~= '' then %>
-              <i class="fas fa-tag"></i> <%= item.nickname %>
-            <% else %>
-              &nbsp;
-            <% end %>
+          <% -- 昵称显示 %>
+          <% if item.nickname and item.nickname ~= '' then %>
+          <div class="text-muted small mt-1">
+            <i class="fas fa-tag"></i> <%= item.nickname %>
           </div>
+          <% end %>
           
-          <div>
+          <div class="mt-1">
           <% if not item.verified then %>
             <span class="badge rounded-pill text-bg-warning">unverified</span>
           <% end %>
@@ -47,45 +45,64 @@
                 <% end %>
             </li>
             
-            <% -- 真实姓名 / Creator ID 统一区域（固定高度） %>
-            <li class="list-group-item" style="min-height: 45px;">
-                <% if user_permissions.can_view_real_name(current_user, item) and 
-                       item.real_name and item.real_name ~= '' then %>
-                    <i class="fas fa-id-card text-success"></i>
-                    <strong><%- locale.get('real_name') %></strong>: <%= item.real_name %>
-                <% elseif item.creator_id ~= nil then %>
-                    <i class="fas fa-user-plus text-info"></i>
-                    <strong><%- locale.get('creator') %></strong>:
-                    <a href="/user?user_id=<%= item.creator_id %>"><%= item.creator_id %></a>
-                <% else %>
-                    <span class="text-muted">—</span>
+            <% -- 真实姓名 / Creator ID 合并显示 %>
+            <% if user_permissions.can_view_real_name(current_user, item) and 
+                   item.real_name and item.real_name ~= '' then %>
+            <li class="list-group-item">
+                <i class="fas fa-id-card text-success"></i>
+                <strong><%- locale.get('real_name') %></strong>: <%= item.real_name %>
+                <% if item.creator_id ~= nil then %>
+                <span class="text-muted small ms-2">
+                    (<i class="fas fa-user-plus"></i> <%- locale.get('creator') %>: 
+                    <a href="/user?user_id=<%= item.creator_id %>"><%= item.creator_id %></a>)
+                </span>
                 <% end %>
             </li>
+            <% elseif item.creator_id ~= nil then %>
+            <li class="list-group-item">
+                <i class="fas fa-user-plus text-info"></i>
+                <strong><%- locale.get('creator') %></strong>:
+                <a href="/user?user_id=<%= item.creator_id %>"><%= item.creator_id %></a>
+            </li>
+            <% end %>
             
-            <% if current_user:has_min_role('moderator') then %>
+            <% -- 用户ID和加入日期合并到一行 %>
             <li class="list-group-item">
+                <% if current_user:has_min_role('moderator') then %>
                 <strong><%- locale.get('user_id') %></strong>: <%= item.id %>
+                <span class="text-muted mx-2">|</span>
+                <% end %>
+                <strong><%- locale.get('join_date') %></strong>: <%= string.from_sql_date(item.created) %>
+                <% if zombie then %>
+                <span class="text-muted mx-2">|</span>
+                <strong><%- locale.get('delete_date') %></strong>: <%= string.from_sql_date(item.deleted) %>
+                <% end %>
+            </li>
+        
+        <% -- 项目统计（权限控制） %>
+        <% if show_project_count or current_user:has_min_role('moderator') then %>
+            <% local project_stats = item:get_project_stats() %>
+            <% if project_stats.total > 0 then %>
+            <li class="list-group-item">
+                <i class="fas fa-folder text-warning"></i>
+                <strong><%- locale.get('projects') %></strong>:
+                <a href="<%= item:url_for('site') %>" class="text-decoration-none">
+                    <span class="badge rounded-pill text-bg-primary" title="<%- locale.get('total_projects') %>">
+                        <%= project_stats.total %>
+                    </span>
+                </a>
+                <% if current_user:has_min_role('moderator') or current_user.username == item.username then %>
+                <span class="ms-2 small text-muted">
+                    <i class="fas fa-share-alt text-info"></i> <%= project_stats.shared %>
+                    <span class="mx-1">|</span>
+                    <i class="fas fa-globe text-success"></i> <%= project_stats.published %>
+                </span>
+                <% end %>
             </li>
             <% end %>
-            <% if show_project_count then %>
-            <li class="list-group-item">
-                <strong><%- locale.get('project_count') %></strong>:
-                <span class="badge rounded-pill text-bg-primary">
-                    <%= item:get_project_count() %></span>
-            </li>
-            <% end %>
-            <li class="list-group-item">
-                <strong><%- locale.get('join_date') %> </strong>:
-                <%= string.from_sql_date(item.created) %>
-            </li>
-        <% if zombie then %>
-        <li class="list-group-item">
-            <strong><%- locale.get('delete_date') %> </strong>:
-            <%= string.from_sql_date(item.deleted) %>
-            </li>
         <% end %>
         
-        <% -- 学生统计信息区域（固定高度） %>
+        <% -- 学生统计信息 %>
         <% if item:is_student() and 
                user_permissions.can_view_student_stats(current_user, item) then %>
             <% 
@@ -93,71 +110,55 @@
             local stats = item:get_assignment_stats()
             %>
             
-            <li class="list-group-item" style="min-height: 120px;">
-                <% if classes and #classes > 0 then %>
-                    <i class="fas fa-users text-primary"></i>
-                    <strong><%- locale.get('classes') %></strong>:
-                    <span class="badge rounded-pill text-bg-info"><%= #classes %></span>
-                    <div class="mt-1 small">
-                        <% for i, class in ipairs(classes) do %>
-                            <% if i <= 2 then %>
-                            <div class="text-muted text-truncate">
-                                • <%= class.name %>
-                            </div>
-                            <% end %>
-                        <% end %>
-                        <% if #classes > 2 then %>
-                        <div class="text-muted small">
-                            <i class="fas fa-ellipsis-h"></i> <%- locale.get('more_items', #classes - 2) %>
+            <% if classes and #classes > 0 then %>
+            <li class="list-group-item">
+                <i class="fas fa-users text-primary"></i>
+                <strong><%- locale.get('classes') %></strong>:
+                <span class="badge rounded-pill text-bg-info"><%= #classes %></span>
+                <div class="mt-2 small">
+                    <% for i, class in ipairs(classes) do %>
+                        <% if i <= 3 then %>
+                        <div class="text-muted text-truncate">
+                            • <%= class.name %>
+                            <span class="text-muted">(<%= class.teacher_username %>)</span>
                         </div>
                         <% end %>
+                    <% end %>
+                    <% if #classes > 3 then %>
+                    <div class="text-muted small fst-italic">
+                        <i class="fas fa-ellipsis-h"></i> <%- locale.get('more_items', #classes - 3) %>
                     </div>
-                <% else %>
-                    <span class="text-muted">
-                        <i class="fas fa-users"></i> <%- locale.get('no_classes') %>
-                    </span>
-                <% end %>
+                    <% end %>
+                </div>
             </li>
+            <% end %>
             
-            <li class="list-group-item" style="min-height: 100px;">
-                <% if stats and stats.total > 0 then %>
-                    <i class="fas fa-tasks text-success"></i>
-                    <strong><%- locale.get('assignment_stats') %></strong>
-                    <div class="mt-2">
-                        <div class="progress mb-1" style="height: 18px;">
-                            <div class="progress-bar bg-success" 
-                                 role="progressbar" 
-                                 style="width: <%= stats.completion_rate %>%"
-                                 aria-valuenow="<%= stats.completion_rate %>" 
-                                 aria-valuemin="0" 
-                                 aria-valuemax="100">
-                                <%= stats.completion_rate %>%
-                            </div>
-                        </div>
-                        <div class="small">
-                            <i class="fas fa-check-circle text-success"></i>
-                            <%= stats.submitted %>/<%= stats.total %>
-                            <% if stats.avg_points > 0 then %>
-                            | <i class="fas fa-star text-warning"></i>
-                            <%= string.format("%.1f", stats.avg_points) %>
-                            <% end %>
+            <% if stats and stats.total > 0 then %>
+            <li class="list-group-item">
+                <i class="fas fa-tasks text-success"></i>
+                <strong><%- locale.get('assignments') %></strong>:
+                <span class="badge rounded-pill text-bg-secondary"><%= stats.total %></span>
+                <div class="mt-2">
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar bg-success" 
+                             role="progressbar" 
+                             style="width: <%= stats.completion_rate %>%"
+                             aria-valuenow="<%= stats.completion_rate %>" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                            <%= stats.completion_rate %>%
                         </div>
                     </div>
-                <% else %>
-                    <span class="text-muted">
-                        <i class="fas fa-tasks"></i> <%- locale.get('no_assignments') %>
-                    </span>
-                <% end %>
+                    <div class="small mt-1 text-muted">
+                        <i class="fas fa-check-circle text-success"></i> <%= stats.submitted %>/<%= stats.total %>
+                        <% if stats.avg_points > 0 then %>
+                        <span class="mx-1">|</span>
+                        <i class="fas fa-star text-warning"></i> <%= string.format("%.1f", stats.avg_points) %>
+                        <% end %>
+                    </div>
+                </div>
             </li>
-        <% end %>
-        <% -- 非学生用户的占位区域 %>
-        <% if not item:is_student() then %>
-            <li class="list-group-item" style="min-height: 120px;">
-                <span class="text-muted">—</span>
-            </li>
-            <li class="list-group-item" style="min-height: 100px;">
-                <span class="text-muted">—</span>
-            </li>
+            <% end %>
         <% end %>        <% if not zombie and current_user:has_min_role('moderator') then %>
         <li class="list-group-item">
             <div class="input-group">

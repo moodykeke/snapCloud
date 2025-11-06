@@ -529,6 +529,7 @@ Want to know more? Visit @2]],
     creator = "Creator",
     unverified = "Unverified",
     more_items = "@1 more",
+    total_projects = "Total Projects",
     confirm_action = "Confirm Action",
     delete_user = "Confirm delete user @1?",
 }
