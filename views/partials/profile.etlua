@@ -123,7 +123,7 @@
             </li>
         <% end %>
         
-                <% -- 学生统计（班级 + 作业统计） - 紧凑显示 %>
+        <% -- 学生统计（班级 + 作业统计） - 紧凑显示 %>
         <% if current_user:has_min_role('moderator') and can_view_student_stats then %>
             <% local classes = item:get_student_classes() %>
             <% local stats = item:get_assignment_stats() %>
