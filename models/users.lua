@@ -177,30 +177,21 @@ local ActiveUsers = Model:extend('active_users', {
     get_classes = function(self)
         if not self:is_student() then return {} end
         
-        local ClassMemberships = package.loaded.ClassMemberships
-        local Classes = package.loaded.Classes
-        local Users = package.loaded.Users
+        local db = package.loaded.db
         
-        local memberships = ClassMemberships:select(
-            'WHERE student_id = ? AND deleted_at IS NULL',
-            self.id
-        )
+        -- 使用student_classes视图获取班级信息
+        local result = db.query([[
+            SELECT 
+                class_id as id,
+                class_name as name,
+                teacher_id,
+                teacher_username
+            FROM student_classes
+            WHERE student_id = ?
+            ORDER BY class_name
+        ]], self.id)
         
-        local classes = {}
-        for _, membership in ipairs(memberships) do
-            local class = Classes:find(membership.class_id)
-            if class and not class.deleted_at then
-                local teacher = Users:find(class.teacher_id)
-                table.insert(classes, {
-                    id = class.id,
-                    name = class.name,
-                    teacher_id = class.teacher_id,
-                    teacher_username = teacher and teacher.username or 'Unknown'
-                })
-            end
-        end
-        
-        return classes
+        return result or {}
     end,
     
     -- 获取学生作业统计
