@@ -14,8 +14,8 @@ M.can_view_real_name = function(viewer, target_user)
     -- 本人可以查看自己的真实姓名
     if viewer.id == target_user.id then return true end
     
-    -- 管理员可以查看所有人的真实姓名
-    if viewer:isadmin() then return true end
+    -- 管理员和版主可以查看所有人的真实姓名（版主只读，管理员可编辑由前端控制）
+    if viewer:has_min_role('moderator') then return true end
     
     -- 教师可以查看自己创建的学生的真实姓名
     if viewer.is_teacher and target_user.creator_id == viewer.id then
@@ -61,8 +61,8 @@ M.can_view_student_stats = function(viewer, target_user)
     -- 学生本人可以查看自己的统计
     if viewer.id == target_user.id then return true end
     
-    -- 管理员可以查看所有学生的统计
-    if viewer:isadmin() then return true end
+    -- 管理员和版主可以查看所有学生的统计（监督职责）
+    if viewer:has_min_role('moderator') then return true end
     
     -- 教师可以查看自己创建的学生的统计
     if viewer.is_teacher and target_user.creator_id == viewer.id then
@@ -101,6 +101,52 @@ M.can_view_admin_info = function(viewer, target_user)
     
     -- 只有版主及以上可以查看用户ID等管理信息
     return viewer:has_min_role('moderator')
+end
+
+-- 检查是否可以编辑用户角色
+-- Check if viewer can edit target user's role
+-- @param viewer: 查看者用户对象
+-- @param target_user: 目标用户对象
+-- @return boolean
+M.can_edit_role = function(viewer, target_user)
+    if not viewer or not target_user then return false end
+    
+    -- 只有管理员可以修改用户角色
+    return viewer:isadmin()
+end
+
+-- 检查是否可以编辑教师身份
+-- Check if viewer can edit teacher status
+-- @param viewer: 查看者用户对象
+-- @param target_user: 目标用户对象
+-- @return boolean
+M.can_edit_teacher_status = function(viewer, target_user)
+    if not viewer or not target_user then return false end
+    
+    -- 只有管理员可以修改教师身份
+    return viewer:isadmin()
+end
+
+-- 检查是否可以编辑用户基本信息（邮箱、密码等）
+-- Check if viewer can edit basic user information
+-- @param viewer: 查看者用户对象
+-- @param target_user: 目标用户对象
+-- @return boolean
+M.can_edit_user_info = function(viewer, target_user)
+    if not viewer or not target_user then return false end
+    
+    -- 本人可以编辑自己的信息
+    if viewer.id == target_user.id then return true end
+    
+    -- 版主及以上可以编辑用户基本信息
+    if viewer:has_min_role('moderator') then return true end
+    
+    -- 教师可以编辑自己创建的学生的信息
+    if viewer.is_teacher and target_user.creator_id == viewer.id then
+        return true
+    end
+    
+    return false
 end
 
 return M

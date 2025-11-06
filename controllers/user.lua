@@ -693,7 +693,16 @@ UserController = {
         assert_min_role(self, 'admin')
         if self.queried_user then
             assert_can_set_role(self, self.params.role)
+            
+            -- 记录角色变更日志（重要操作审计）
+            local old_role = self.queried_user.role
             self.queried_user:update({ role = self.params.role })
+            
+            -- 记录操作日志
+            ngx.log(ngx.WARN, 
+                string.format("[AUDIT] Role changed: user=%s, old_role=%s, new_role=%s, operator=%s", 
+                    self.queried_user.username, old_role, self.params.role, 
+                    self.current_user.username))
         end
         return jsonResponse({
             message =
@@ -707,7 +716,15 @@ UserController = {
         -- 只有管理员可以修改教师身份
         assert_min_role(self, 'admin')
         if self.queried_user then
+            -- 记录教师身份变更日志
+            local old_status = self.queried_user.is_teacher
             self.queried_user:update({ is_teacher = self.params.is_teacher })
+            
+            -- 记录操作日志
+            ngx.log(ngx.WARN,
+                string.format("[AUDIT] Teacher status changed: user=%s, old=%s, new=%s, operator=%s",
+                    self.queried_user.username, tostring(old_status), 
+                    tostring(self.params.is_teacher), self.current_user.username))
         end
         return jsonResponse({
             message =

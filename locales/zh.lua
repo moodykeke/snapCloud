@@ -680,6 +680,9 @@ local locale = {
     revive_usr = "恢复用户",
     perma_delete_usr = "永久删除",
     delete_date = "删除日期",
+    reset_password = "重置密码",
+    password_reset = "密码已重置",
+    change_username = "更改用户名",
 }
 
 return locale
