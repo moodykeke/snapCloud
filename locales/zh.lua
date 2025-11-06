@@ -659,6 +659,14 @@ local locale = {
     view_user_projects = "查看用户的项目",
     view_user_page = "进入用户页面",
     all_projects = "所有项目",
+    total = "总计",
+    shared = "分享",
+    published = "发布",
+    no_projects = "暂无项目",
+    view_all_projects = "查看所有项目",
+    view_shared_projects = "查看分享的项目",
+    view_published_projects = "查看发布的项目",
+    more = "更多",
     
     -- User Actions (新增字段)
     confirm_action = "确认操作",

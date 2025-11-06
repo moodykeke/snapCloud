@@ -11,28 +11,34 @@
 <div class="col-12 col-sm-6 col-md-4 mb-3">
   <div class="card <%- card_classes %>">
       <div class="card-header">
-          <% if not zombie then %>
-          <a class="card-title" href="<%= item:url_for('site') %>">
-          <% end %>
-              <strong><%- util.visualize_whitespace_html(item.username) %></strong>
-          <% if not zombie then %>
-          </a>
-          <% end %>
-          
-          <% -- 昵称显示 %>
-          <% if item.nickname and item.nickname ~= '' then %>
-          <div class="text-muted small mt-1">
-            <i class="fas fa-tag"></i> <%= item.nickname %>
+          <% -- 第一行：用户名 + 账号类型badge在一行 %>
+          <div class="d-flex justify-content-between align-items-start">
+              <div>
+                  <% if not zombie then %>
+                  <a class="card-title" href="<%= item:url_for('site') %>">
+                  <% end %>
+                      <strong><%- util.visualize_whitespace_html(item.username) %></strong>
+                  <% if not zombie then %>
+                  </a>
+                  <% end %>
+              </div>
+              <div>
+                  <% if not item.verified then %>
+                  <span class="badge rounded-pill text-bg-warning">unverified</span>
+                  <% end %>
+                  <% if item.role ~= 'standard' then %>
+                  <span class="badge rounded-pill text-bg-<%- role_bg_color %>"><%- item.role %></span>
+                  <% end %>
+              </div>
           </div>
-          <% end %>
           
-          <div class="mt-1">
-          <% if not item.verified then %>
-            <span class="badge rounded-pill text-bg-warning">unverified</span>
-          <% end %>
-          <% if item.role ~= 'standard' then %>
-            <span class="badge rounded-pill text-bg-<%- role_bg_color %>"><%- item.role %></span>
-          <% end %>
+          <% -- 第二行：昵称（如果有） %>
+          <div class="text-muted small mt-1" style="min-height: 20px;">
+            <% if item.nickname and item.nickname ~= '' then %>
+              <i class="fas fa-tag"></i> <%= item.nickname %>
+            <% else %>
+              <span class="text-muted fst-italic">未设置昵称</span>
+            <% end %>
           </div>
       </div>
       <ul class="list-group list-group-flush">
@@ -45,20 +51,20 @@
                 <% end %>
             </li>
             
-            <% -- 真实姓名 / Creator ID 合并显示 %>
-            <% if user_permissions.can_view_real_name(current_user, item) and 
-                   item.real_name and item.real_name ~= '' then %>
-            <li class="list-group-item">
+            <% -- 真实姓名（固定高度，空值显示"未设置"） %>
+            <li class="list-group-item" style="min-height: 45px;">
                 <i class="fas fa-id-card text-success"></i>
-                <strong><%- locale.get('real_name') %></strong>: <%= item.real_name %>
-                <% if item.creator_id ~= nil then %>
-                <span class="text-muted small ms-2">
-                    (<i class="fas fa-user-plus"></i> <%- locale.get('creator') %>: 
-                    <a href="/user?user_id=<%= item.creator_id %>"><%= item.creator_id %></a>)
-                </span>
+                <strong><%- locale.get('real_name') %></strong>: 
+                <% if user_permissions.can_view_real_name(current_user, item) and 
+                       item.real_name and item.real_name ~= '' then %>
+                    <%= item.real_name %>
+                <% else %>
+                    <span class="text-muted fst-italic">未设置</span>
                 <% end %>
             </li>
-            <% elseif item.creator_id ~= nil then %>
+            
+            <% -- 创建者信息（如果有） %>
+            <% if item.creator_id ~= nil then %>
             <li class="list-group-item">
                 <i class="fas fa-user-plus text-info"></i>
                 <strong><%- locale.get('creator') %></strong>:
@@ -82,34 +88,50 @@
         <% -- 项目统计（权限控制） %>
         <% if show_project_count or current_user:has_min_role('moderator') then %>
             <% local project_stats = item:get_project_stats() %>
-            <% if project_stats.total > 0 then %>
-            <li class="list-group-item">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <i class="fas fa-folder text-warning"></i>
-                        <strong><%- locale.get('projects') %></strong>:
-                        <a href="/user_projects/<%- item.username %>" class="text-decoration-none" title="<%- locale.get('view_user_projects') %>">
-                            <span class="badge rounded-pill text-bg-primary">
-                                <%= project_stats.total %>
-                            </span>
-                        </a>
-                        <% if current_user:has_min_role('moderator') or current_user.username == item.username then %>
-                        <span class="ms-2 small text-muted">
-                            <i class="fas fa-share-alt text-info"></i> <%= project_stats.shared %>
-                            <span class="mx-1">|</span>
-                            <i class="fas fa-globe text-success"></i> <%= project_stats.published %>
-                        </span>
+            <li class="list-group-item" style="min-height: 80px;">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="mb-2">
+                            <i class="fas fa-folder text-warning"></i>
+                            <strong><%- locale.get('projects') %></strong>
+                        </div>
+                        <% if project_stats and project_stats.total > 0 then %>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <% -- 总项目数 %>
+                            <a href="/user_projects/<%- item.username %>" 
+                               class="badge rounded-pill text-bg-primary text-decoration-none" 
+                               title="<%- locale.get('view_all_projects') %>">
+                                <i class="fas fa-list"></i> <%- locale.get('total') %>: <%= project_stats.total %>
+                            </a>
+                            <% if current_user:has_min_role('moderator') or current_user.username == item.username then %>
+                            <% -- 分享项目数 %>
+                            <a href="/user_projects/<%- item.username %>?filter=shared" 
+                               class="badge rounded-pill text-bg-info text-decoration-none"
+                               title="<%- locale.get('view_shared_projects') %>">
+                                <i class="fas fa-share-alt"></i> <%- locale.get('shared') %>: <%= project_stats.shared %>
+                            </a>
+                            <% -- 发布项目数 %>
+                            <a href="/user_projects/<%- item.username %>?filter=published"
+                               class="badge rounded-pill text-bg-success text-decoration-none"
+                               title="<%- locale.get('view_published_projects') %>">
+                                <i class="fas fa-globe"></i> <%- locale.get('published') %>: <%= project_stats.published %>
+                            </a>
+                            <% end %>
+                        </div>
+                        <% else %>
+                        <span class="text-muted fst-italic small"><%- locale.get('no_projects') %></span>
                         <% end %>
                     </div>
-                    <a href="/user?username=<%- item.username %>" class="btn btn-sm btn-outline-primary" title="<%- locale.get('view_user_page') %>">
+                    <a href="/user?username=<%- item.username %>" 
+                       class="btn btn-sm btn-outline-primary" 
+                       title="<%- locale.get('view_user_page') %>">
                         <i class="fas fa-arrow-right"></i>
                     </a>
                 </div>
             </li>
-            <% end %>
         <% end %>
         
-        <% -- 学生统计信息 %>
+        <% -- 学生统计信息（合并到一行） %>
         <% if item:is_student() and 
                user_permissions.can_view_student_stats(current_user, item) then %>
             <% 
@@ -117,55 +139,66 @@
             local stats = item:get_assignment_stats()
             %>
             
-            <% if classes and #classes > 0 then %>
-            <li class="list-group-item">
-                <i class="fas fa-users text-primary"></i>
-                <strong><%- locale.get('classes') %></strong>:
-                <span class="badge rounded-pill text-bg-info"><%= #classes %></span>
-                <div class="mt-2 small">
-                    <% for i, class in ipairs(classes) do %>
-                        <% if i <= 3 then %>
-                        <div class="text-muted text-truncate">
-                            • <%= class.name %>
-                            <span class="text-muted">(<%= class.teacher_username %>)</span>
+            <li class="list-group-item" style="min-height: 100px;">
+                <div class="row g-2">
+                    <% -- 左列：班级信息 %>
+                    <div class="col-6">
+                        <div class="mb-1">
+                            <i class="fas fa-users text-primary"></i>
+                            <strong><%- locale.get('classes') %></strong>:
+                            <% if classes and #classes > 0 then %>
+                            <span class="badge rounded-pill text-bg-info"><%= #classes %></span>
+                            <% else %>
+                            <span class="text-muted fst-italic small">0</span>
+                            <% end %>
+                        </div>
+                        <% if classes and #classes > 0 then %>
+                        <div class="small text-muted">
+                            <% for i, class in ipairs(classes) do %>
+                                <% if i <= 2 then %>
+                                <div class="text-truncate" style="max-width: 100%;">
+                                    • <%= class.name %>
+                                </div>
+                                <% end %>
+                            <% end %>
+                            <% if #classes > 2 then %>
+                            <div class="fst-italic">+ <%= #classes - 2 %> <%- locale.get('more') %></div>
+                            <% end %>
                         </div>
                         <% end %>
-                    <% end %>
-                    <% if #classes > 3 then %>
-                    <div class="text-muted small fst-italic">
-                        <i class="fas fa-ellipsis-h"></i> <%- locale.get('more_items', #classes - 3) %>
                     </div>
-                    <% end %>
-                </div>
-            </li>
-            <% end %>
-            
-            <% if stats and stats.total > 0 then %>
-            <li class="list-group-item">
-                <i class="fas fa-tasks text-success"></i>
-                <strong><%- locale.get('assignments') %></strong>:
-                <span class="badge rounded-pill text-bg-secondary"><%= stats.total %></span>
-                <div class="mt-2">
-                    <div class="progress" style="height: 20px;">
-                        <div class="progress-bar bg-success" 
-                             role="progressbar" 
-                             style="width: <%= stats.completion_rate %>%"
-                             aria-valuenow="<%= stats.completion_rate %>" 
-                             aria-valuemin="0" 
-                             aria-valuemax="100">
-                            <%= stats.completion_rate %>%
+                    
+                    <% -- 右列：作业信息 %>
+                    <div class="col-6">
+                        <div class="mb-1">
+                            <i class="fas fa-tasks text-success"></i>
+                            <strong><%- locale.get('assignments') %></strong>:
+                            <% if stats and stats.total > 0 then %>
+                            <span class="badge rounded-pill text-bg-secondary"><%= stats.total %></span>
+                            <% else %>
+                            <span class="text-muted fst-italic small">0</span>
+                            <% end %>
                         </div>
-                    </div>
-                    <div class="small mt-1 text-muted">
-                        <i class="fas fa-check-circle text-success"></i> <%= stats.submitted %>/<%= stats.total %>
-                        <% if stats.avg_points > 0 then %>
-                        <span class="mx-1">|</span>
-                        <i class="fas fa-star text-warning"></i> <%= string.format("%.1f", stats.avg_points) %>
+                        <% if stats and stats.total > 0 then %>
+                        <div class="small">
+                            <div class="progress mb-1" style="height: 16px;">
+                                <div class="progress-bar bg-success" 
+                                     role="progressbar" 
+                                     style="width: <%= stats.completion_rate %>%">
+                                    <%= stats.completion_rate %>%
+                                </div>
+                            </div>
+                            <div class="text-muted">
+                                <i class="fas fa-check-circle text-success"></i> <%= stats.submitted %>/<%= stats.total %>
+                                <% if stats.avg_points > 0 then %>
+                                <br><i class="fas fa-star text-warning"></i> <%= string.format("%.1f", stats.avg_points) %>
+                                <% end %>
+                            </div>
+                        </div>
                         <% end %>
                     </div>
                 </div>
             </li>
-            <% end %>
         <% end %>        <% if not zombie and current_user:has_min_role('moderator') then %>
         <li class="list-group-item">
             <div class="input-group">

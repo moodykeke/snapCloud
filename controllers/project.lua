@@ -138,10 +138,21 @@ ProjectController = {
                             (self.current_user and self.current_user:has_min_role('moderator'))) 
                             and not self.params.show_public
         
+        -- 调试日志
+        ngx.log(ngx.WARN, "[DEBUG] user_projects: username=", tostring(self.params.username), 
+                ", can_see_all=", tostring(can_see_all),
+                ", current_user=", self.current_user and self.current_user.username or "nil")
+        
+        self.params.order = 'lastupdated DESC'
+        
         if can_see_all then
-            return ProjectController.my_projects(self)
+            -- 管理员/版主查看其他用户的所有项目
+            return ProjectController.run_query(
+                self,
+                db.interpolate_query('WHERE username = ?', tostring(self.params.username))
+            )
         else
-            self.params.order = 'lastupdated DESC'
+            -- 普通访客只能看已发布的项目
             return ProjectController.run_query(
                 self,
                 db.interpolate_query(
