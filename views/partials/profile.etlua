@@ -88,7 +88,7 @@
                     <div>
                         <i class="fas fa-folder text-warning"></i>
                         <strong><%- locale.get('projects') %></strong>:
-                        <a href="/user?username=<%= item.username %>" class="text-decoration-none" title="<%- locale.get('view_user_projects') %>">
+                        <a href="/user_projects/<%- item.username %>" class="text-decoration-none" title="<%- locale.get('view_user_projects') %>">
                             <span class="badge rounded-pill text-bg-primary">
                                 <%= project_stats.total %>
                             </span>
@@ -101,7 +101,7 @@
                         </span>
                         <% end %>
                     </div>
-                    <a href="/user?username=<%= item.username %>" class="btn btn-sm btn-outline-primary" title="<%- locale.get('view_user_page') %>">
+                    <a href="/user?username=<%- item.username %>" class="btn btn-sm btn-outline-primary" title="<%- locale.get('view_user_page') %>">
                         <i class="fas fa-arrow-right"></i>
                     </a>
                 </div>
