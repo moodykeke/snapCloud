@@ -653,6 +653,7 @@ local locale = {
     average_score = "平均分数",
     completion_rate = "完成率",
     creator = "创建者",
+    personal_registration = "个人注册",
     unverified = "未验证",
     more_items = "还有 @1 项",
     total_projects = "总项目数",

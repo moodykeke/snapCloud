@@ -11,18 +11,35 @@
 <div class="col-12 col-sm-6 col-md-4 mb-3">
   <div class="card <%- card_classes %>">
       <div class="card-header">
-          <% -- 第一行：用户名 + 账号类型badge在一行 %>
-          <div class="d-flex justify-content-between align-items-start">
-              <div>
+          <% -- 第一行：用户名 昵称 真实姓名 账号类型 %>
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-1 mb-1">
+              <div class="d-flex align-items-center gap-2 flex-wrap">
                   <% if not zombie then %>
-                  <a class="card-title" href="<%= item:url_for('site') %>">
+                  <a class="card-title text-decoration-none" href="<%= item:url_for('site') %>">
                   <% end %>
                       <strong><%- util.visualize_whitespace_html(item.username) %></strong>
                   <% if not zombie then %>
                   </a>
                   <% end %>
+                  
+                  <span class="text-muted small">
+                    <% if item.nickname and item.nickname ~= '' then %>
+                      (<%= item.nickname %>)
+                    <% else %>
+                      (未设置昵称)
+                    <% end %>
+                  </span>
+                  
+                  <span class="text-muted small">
+                    <% if user_permissions.can_view_real_name(current_user, item) and 
+                           item.real_name and item.real_name ~= '' then %>
+                        <%= item.real_name %>
+                    <% else %>
+                        未设置
+                    <% end %>
+                  </span>
               </div>
-              <div>
+              <div class="d-flex gap-1">
                   <% if not item.verified then %>
                   <span class="badge rounded-pill text-bg-warning">unverified</span>
                   <% end %>
@@ -32,43 +49,27 @@
               </div>
           </div>
           
-          <% -- 第二行：昵称（如果有） %>
-          <div class="text-muted small mt-1" style="min-height: 20px;">
-            <% if item.nickname and item.nickname ~= '' then %>
-              <i class="fas fa-tag"></i> <%= item.nickname %>
-            <% else %>
-              <span class="text-muted fst-italic">未设置昵称</span>
-            <% end %>
+          <% -- 第二行：邮箱 | 创建者（或"个人注册"） %>
+          <div class="text-muted small">
+              <i class="fas fa-envelope"></i>
+              <a href="mailto:<%= item.email %>" class="text-decoration-none"><%= item.email %></a>
+              <span class="mx-2">|</span>
+              <% if item.creator_id ~= nil then %>
+                  <i class="fas fa-user-plus"></i>
+                  <%- locale.get('creator') %>: 
+                  <a href="/user?user_id=<%= item.creator_id %>"><%= item.creator_id %></a>
+              <% else %>
+                  <i class="fas fa-user-check"></i>
+                  <span><%- locale.get('personal_registration') %></span>
+              <% end %>
           </div>
       </div>
       <ul class="list-group list-group-flush">
+            <% -- unique_email（如果有） %>
+            <% if item.unique_email and item.email ~= item.unique_email then %>
             <li class="list-group-item">
-                <a href="mailto:<%= item.email %>"><%= item.email %></a>
-                <% if item.unique_email and item.email ~= item.unique_email then %>
-                    <br>
-                    <span class="badge text-bg-secondary">unique email</span>
-                    <code><%- util.visualize_whitespace_html(item.unique_email) %></code>
-                <% end %>
-            </li>
-            
-            <% -- 真实姓名（固定高度，空值显示"未设置"） %>
-            <li class="list-group-item" style="min-height: 45px;">
-                <i class="fas fa-id-card text-success"></i>
-                <strong><%- locale.get('real_name') %></strong>: 
-                <% if user_permissions.can_view_real_name(current_user, item) and 
-                       item.real_name and item.real_name ~= '' then %>
-                    <%= item.real_name %>
-                <% else %>
-                    <span class="text-muted fst-italic">未设置</span>
-                <% end %>
-            </li>
-            
-            <% -- 创建者信息（如果有） %>
-            <% if item.creator_id ~= nil then %>
-            <li class="list-group-item">
-                <i class="fas fa-user-plus text-info"></i>
-                <strong><%- locale.get('creator') %></strong>:
-                <a href="/user?user_id=<%= item.creator_id %>"><%= item.creator_id %></a>
+                <span class="badge text-bg-secondary">unique email</span>
+                <code><%- util.visualize_whitespace_html(item.unique_email) %></code>
             </li>
             <% end %>
             
@@ -200,49 +201,55 @@
                 </div>
             </li>
         <% end %>        <% if not zombie and current_user:has_min_role('moderator') then %>
+        <% -- 角色和Teacher在同一行 %>
         <li class="list-group-item">
-            <div class="input-group">
-                <span class="input-group-text"><%- locale.get('role') %></span>
-                <select class="form-select form-select-sm"
-                    aria-label="Select a role"
-                    onchange="cloud.post(
-                        '/users/<%= item.username %>/set_role',
-                        null,
-                        { username: '<%= item.username %>', role: this.value }
-                    );">
-                    <% for role, _ in pairs(package.loaded.Users.roles) do %>
-                    <option value="<%= role %>"
-                        <%- role == item.role and 'selected' or '' %>
-                    >
-                        <%- locale.get(role) %>
-                    </option>
-                    <% end %>
-                </select>
+            <div class="row g-2 align-items-center">
+                <% -- 左侧：角色选择 %>
+                <div class="col-7">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text"><%- locale.get('role') %></span>
+                        <select class="form-select form-select-sm"
+                            aria-label="Select a role"
+                            onchange="cloud.post(
+                                '/users/<%= item.username %>/set_role',
+                                null,
+                                { username: '<%= item.username %>', role: this.value }
+                            );">
+                            <% for role, _ in pairs(package.loaded.Users.roles) do %>
+                            <option value="<%= role %>"
+                                <%- role == item.role and 'selected' or '' %>
+                            >
+                                <%- locale.get(role) %>
+                            </option>
+                            <% end %>
+                        </select>
+                    </div>
+                </div>
+                <% -- 右侧：Teacher开关 %>
+                <div class="col-5">
+                    <div class="form-check form-switch">
+                        <% label_id = "is_teacher-" .. tostring(item.id) %>
+                        <input type="checkbox"
+                            name="is_teacher"
+                            class="form-check-input"
+                            id="<%- label_id %>"
+                            <%- item.is_teacher and 'checked' or '' %>
+                            onchange="
+                                cloud.post(
+                                    '/users/<%= item.username %>/set_teacher',
+                                    null,
+                                    {
+                                        username: '<%= item.username %>',
+                                        is_teacher: this.checked
+                                    }
+                                );"
+                        >
+                        <label for="<%- label_id %>" class="form-check-label">
+                            <%- locale.get('teacher') %>
+                        </label>
+                    </div>
+                </div>
             </div>
-        </li>
-        <li class="list-group-item">
-            <div class="form-check form-switch">
-            <% label_id = "is_teacher-" .. tostring(item.id) %>
-            <strong>
-                <label for="<%- label_id %>" class="form-check-label">
-                    <%- locale.get('teacher') %>
-                </label>
-            </strong>
-            <input type="checkbox"
-                name="is_teacher"
-                class="form-check-input"
-                id="<%- label_id %>"
-                <%- item.is_teacher and 'checked' or '' %>
-                onchange="
-                    cloud.post(
-                        '/users/<%= item.username %>/set_teacher',
-                        null,
-                        {
-                            username: '<%= item.username %>',
-                            is_teacher: this.checked
-                        }
-                    );"
-            >
         </li>
         <% end %>
         </ul>
