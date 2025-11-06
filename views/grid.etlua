@@ -90,7 +90,7 @@ num_pages = num_pages or math.ceil(#items / items_per_page)
                 end
                 %>
             <% if new_row then %>
-            <div class="<%= class %> row g-2 row-cols-auto">
+            <div class="<%= class %> row g-2<%= item_type == 'profile' and '' or ' row-cols-auto' %>">
             <% end %>
                 <% render('views.partials.' .. item_type .. '', params) %>
             <% if end_row then %>
