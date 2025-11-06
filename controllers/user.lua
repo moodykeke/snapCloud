@@ -802,6 +802,61 @@ UserController = {
             )
         )
     end),
+    
+    -- 获取用户详细信息（包含权限控制）
+    -- Get user detail with permission control
+    get_user_detail = capture_errors(function (self)
+        assert_current_user_logged_in(self)
+        
+        local target_user = Users:find({username = self.params.username})
+        assert_error(target_user, 'User not found')
+        
+        local user_permissions = require('lib.user_permissions')
+        
+        -- 基础信息（所有人可见）
+        local info = {
+            username = target_user.username,
+            nickname = target_user.nickname,
+            role = target_user.role,
+            created = target_user.created,
+            verified = target_user.verified,
+            is_teacher = target_user.is_teacher,
+            project_count = target_user:get_project_count()
+        }
+        
+        -- 邮箱（权限控制）
+        if user_permissions.can_view_email(self.current_user, target_user) then
+            info.email = target_user.email
+            info.unique_email = target_user.unique_email
+        end
+        
+        -- 真实姓名（权限控制）
+        if user_permissions.can_view_real_name(self.current_user, target_user) then
+            info.real_name = target_user.real_name
+        end
+        
+        -- 用户ID和创建者信息（版主及以上）
+        if user_permissions.can_view_admin_info(self.current_user, target_user) then
+            info.id = target_user.id
+            info.creator_id = target_user.creator_id
+            
+            if target_user.creator_id then
+                local creator = Users:find(target_user.creator_id)
+                if creator then
+                    info.creator_username = creator.username
+                end
+            end
+        end
+        
+        -- 学习统计（学生账号 + 有权限）
+        if target_user:is_student() and 
+           user_permissions.can_view_student_stats(self.current_user, target_user) then
+            info.classes = target_user:get_classes()
+            info.assignment_stats = target_user:get_assignment_stats()
+        end
+        
+        return jsonResponse({ user = info })
+    end),
 }
 
 app:match(

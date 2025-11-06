@@ -170,6 +170,83 @@ local ActiveUsers = Model:extend('active_users', {
     end,
     cannot_access_forum = function (self)
         return self:is_student() or self:isbanned() or self.validated == false
+    end,
+    
+    -- 获取学生所属班级列表
+    -- Get student's class memberships
+    get_classes = function(self)
+        if not self:is_student() then return {} end
+        
+        local ClassMemberships = package.loaded.ClassMemberships
+        local Classes = package.loaded.Classes
+        local Users = package.loaded.Users
+        
+        local memberships = ClassMemberships:select(
+            'WHERE student_id = ? AND deleted_at IS NULL',
+            self.id
+        )
+        
+        local classes = {}
+        for _, membership in ipairs(memberships) do
+            local class = Classes:find(membership.class_id)
+            if class and not class.deleted_at then
+                local teacher = Users:find(class.teacher_id)
+                table.insert(classes, {
+                    id = class.id,
+                    name = class.name,
+                    teacher_id = class.teacher_id,
+                    teacher_username = teacher and teacher.username or 'Unknown'
+                })
+            end
+        end
+        
+        return classes
+    end,
+    
+    -- 获取学生作业统计
+    -- Get student's assignment statistics
+    get_assignment_stats = function(self)
+        if not self:is_student() then return nil end
+        
+        local db = package.loaded.db
+        
+        -- 查询学生的作业统计
+        local result = db.query([[
+            SELECT 
+                COUNT(DISTINCT a.id) as total_assignments,
+                COUNT(DISTINCT s.id) as submitted_count,
+                AVG(s.points) as avg_points
+            FROM assignments a
+            LEFT JOIN submissions s ON a.id = s.assignment_id AND s.student_id = ?
+            WHERE a.deleted_at IS NULL
+                AND a.class_id IN (
+                    SELECT class_id FROM class_memberships 
+                    WHERE student_id = ? AND deleted_at IS NULL
+                )
+        ]], self.id, self.id)
+        
+        if not result or not result[1] then
+            return {
+                total = 0,
+                submitted = 0,
+                avg_points = 0,
+                completion_rate = 0
+            }
+        end
+        
+        local row = result[1]
+        local total = tonumber(row.total_assignments) or 0
+        local submitted = tonumber(row.submitted_count) or 0
+        local avg_points = tonumber(row.avg_points) or 0
+        
+        return {
+            total = total,
+            submitted = submitted,
+            avg_points = avg_points,
+            completion_rate = total > 0 
+                and math.floor((submitted / total) * 100)
+                or 0
+        }
     end
 })
 

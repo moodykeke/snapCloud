@@ -519,6 +519,17 @@ Want to know more? Visit @2]],
     admin_carousel_no_collections = "No collections available",
     admin_carousel_already_exists = "This collection is already featured in this carousel",
     admin_carousel_add_error = "Failed to add carousel, please try again",
+    
+    -- User Info Enhancements (新增字段)
+    -- ======================
+    real_name = "Real Name",
+    submitted = "Submitted",
+    average_score = "Average Score",
+    completion_rate = "Completion Rate",
+    creator = "Creator",
+    unverified = "Unverified",
+    confirm_action = "Confirm Action",
+    delete_user = "Confirm delete user @1?",
 }
 
 return locale

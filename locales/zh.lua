@@ -644,6 +644,25 @@ local locale = {
     bulk_text = "上传 CSV 文件或粘贴 CSV 内容以批量创建学生账号。格式：用户名,密码",
     bulk_make_collection = "创建班级合集",
     bulk_create = "创建学生账号",
+    
+    -- User Info Enhancements (新增字段)
+    -- ======================
+    real_name = "真实姓名",
+    submitted = "已提交",
+    average_score = "平均分数",
+    completion_rate = "完成率",
+    creator = "创建者",
+    unverified = "未验证",
+    
+    -- User Actions (新增字段)
+    confirm_action = "确认操作",
+    confirm_reset_password = "确认重置用户 @1 的密码？",
+    confirm_revive = "确认恢复用户 @1？",
+    confirm_perma_delete = "确认永久删除用户 @1？",
+    delete_user = "确认删除用户 @1？",
+    revive_usr = "恢复用户",
+    perma_delete_usr = "永久删除",
+    delete_date = "删除日期",
 }
 
 return locale

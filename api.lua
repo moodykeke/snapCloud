@@ -230,6 +230,11 @@ app:match(api_route('users/:username/follow'), respond_to({
     DELETE = UserController.unfollow
 }))
 
+-- 获取用户详细信息（包含权限控制）
+app:match(api_route('users/:username/detail'), respond_to({
+    GET = UserController.get_user_detail
+}))
+
 app:match(api_route('users/create_learners'), respond_to({
     POST = json_params(UserController.create_learners)
 }))
