@@ -689,7 +689,8 @@ UserController = {
         })
     end),
     set_role = capture_errors(function (self)
-        assert_min_role(self, 'moderator')
+        -- 只有管理员可以修改角色
+        assert_min_role(self, 'admin')
         if self.queried_user then
             assert_can_set_role(self, self.params.role)
             self.queried_user:update({ role = self.params.role })
@@ -703,7 +704,8 @@ UserController = {
         })
     end),
     set_teacher = capture_errors(function (self)
-        assert_min_role(self, 'moderator')
+        -- 只有管理员可以修改教师身份
+        assert_min_role(self, 'admin')
         if self.queried_user then
             self.queried_user:update({ is_teacher = self.params.is_teacher })
         end

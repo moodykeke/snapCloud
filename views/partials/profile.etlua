@@ -73,7 +73,9 @@
             </li>
             <% end %>
             
-            <% -- 用户ID和加入日期合并到一行 %>
+            <% -- 用户ID和加入日期（仅在单个用户页面显示） %>
+            <% -- 通过检查 queried_user 来判断是否在用户详情页 %>
+            <% if queried_user and queried_user.id == item.id then %>
             <li class="list-group-item">
                 <% if current_user:has_min_role('moderator') then %>
                 <strong><%- locale.get('user_id') %></strong>: <%= item.id %>
@@ -85,6 +87,7 @@
                 <strong><%- locale.get('delete_date') %></strong>: <%= string.from_sql_date(item.deleted) %>
                 <% end %>
             </li>
+            <% end %>
         
         <% -- 项目统计（权限控制） %>
         <% if show_project_count or current_user:has_min_role('moderator') then %>
@@ -140,7 +143,7 @@
             local stats = item:get_assignment_stats()
             %>
             
-            <li class="list-group-item" style="min-height: 100px;">
+            <li class="list-group-item">
                 <div class="row g-2">
                     <% -- 左列：班级信息 %>
                     <div class="col-6">
@@ -201,54 +204,75 @@
                 </div>
             </li>
         <% end %>        <% if not zombie and current_user:has_min_role('moderator') then %>
-        <% -- 角色和Teacher在同一行 %>
+        <% -- 角色和Teacher显示 - 只有管理员可以编辑 %>
         <li class="list-group-item">
             <div class="row g-2 align-items-center">
-                <% -- 左侧：角色选择 %>
-                <div class="col-7">
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text"><%- locale.get('role') %></span>
-                        <select class="form-select form-select-sm"
-                            aria-label="Select a role"
-                            onchange="cloud.post(
-                                '/users/<%= item.username %>/set_role',
-                                null,
-                                { username: '<%= item.username %>', role: this.value }
-                            );">
-                            <% for role, _ in pairs(package.loaded.Users.roles) do %>
-                            <option value="<%= role %>"
-                                <%- role == item.role and 'selected' or '' %>
-                            >
-                                <%- locale.get(role) %>
-                            </option>
-                            <% end %>
-                        </select>
-                    </div>
-                </div>
-                <% -- 右侧：Teacher开关 %>
-                <div class="col-5">
-                    <div class="form-check form-switch">
-                        <% label_id = "is_teacher-" .. tostring(item.id) %>
-                        <input type="checkbox"
-                            name="is_teacher"
-                            class="form-check-input"
-                            id="<%- label_id %>"
-                            <%- item.is_teacher and 'checked' or '' %>
-                            onchange="
-                                cloud.post(
-                                    '/users/<%= item.username %>/set_teacher',
+                <% if current_user:isadmin() then %>
+                    <% -- 管理员：可编辑模式 %>
+                    <% -- 左侧：角色选择 %>
+                    <div class="col-7">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text"><%- locale.get('role') %></span>
+                            <select class="form-select form-select-sm"
+                                aria-label="Select a role"
+                                onchange="cloud.post(
+                                    '/users/<%= item.username %>/set_role',
                                     null,
-                                    {
-                                        username: '<%= item.username %>',
-                                        is_teacher: this.checked
-                                    }
-                                );"
-                        >
-                        <label for="<%- label_id %>" class="form-check-label">
-                            <%- locale.get('teacher') %>
-                        </label>
+                                    { username: '<%= item.username %>', role: this.value }
+                                );">
+                                <% for role, _ in pairs(package.loaded.Users.roles) do %>
+                                <option value="<%= role %>"
+                                    <%- role == item.role and 'selected' or '' %>
+                                >
+                                    <%- locale.get(role) %>
+                                </option>
+                                <% end %>
+                            </select>
+                        </div>
                     </div>
-                </div>
+                    <% -- 右侧：Teacher开关 %>
+                    <div class="col-5">
+                        <div class="form-check form-switch">
+                            <% label_id = "is_teacher-" .. tostring(item.id) %>
+                            <input type="checkbox"
+                                name="is_teacher"
+                                class="form-check-input"
+                                id="<%- label_id %>"
+                                <%- item.is_teacher and 'checked' or '' %>
+                                onchange="
+                                    cloud.post(
+                                        '/users/<%= item.username %>/set_teacher',
+                                        null,
+                                        {
+                                            username: '<%= item.username %>',
+                                            is_teacher: this.checked
+                                        }
+                                    );"
+                            >
+                            <label for="<%- label_id %>" class="form-check-label">
+                                <%- locale.get('teacher') %>
+                            </label>
+                        </div>
+                    </div>
+                <% else %>
+                    <% -- 非管理员（版主/教师）：只读模式 %>
+                    <div class="col-7">
+                        <strong><%- locale.get('role') %></strong>: 
+                        <span class="badge rounded-pill text-bg-<%- role_bg_color %>">
+                            <%- locale.get(item.role) %>
+                        </span>
+                    </div>
+                    <div class="col-5">
+                        <strong><%- locale.get('teacher') %></strong>: 
+                        <% if item.is_teacher then %>
+                            <i class="fas fa-check-circle text-success"></i>
+                            <span class="text-success"><%- locale.get('yes') %></span>
+                        <% else %>
+                            <i class="fas fa-times-circle text-muted"></i>
+                            <span class="text-muted"><%- locale.get('no') %></span>
+                        <% end %>
+                    </div>
+                <% end %>
             </div>
         </li>
         <% end %>

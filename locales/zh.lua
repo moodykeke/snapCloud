@@ -342,9 +342,9 @@ local locale = {
     -- Buttons
     become = "成为", -- as an admin, temporarily impersonate this user
     change_email = "更改邮箱",
-    send_msg = "",
+    send_msg = "发送消息",
     ban = "封禁",
-    unban = "",
+    unban = "解封",
     delete_usr = "删除",
     -- New email dialog
     new_email = "新邮箱地址",
@@ -654,6 +654,8 @@ local locale = {
     completion_rate = "完成率",
     creator = "创建者",
     personal_registration = "个人注册",
+    yes = "是",
+    no = "否",
     unverified = "未验证",
     more_items = "还有 @1 项",
     total_projects = "总项目数",
