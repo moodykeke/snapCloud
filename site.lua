@@ -573,12 +573,9 @@ end))
 
 -- Admin bulk import users
 app:get('/admin/bulk-import-users', capture_errors(function (self)
-    if self.current_user then
-        assert_admin(self)
-        return { render = 'admin/bulk_import_users' }
-    else
-        return { redirect_to = self:build_url('/') }
-    end
+    assert_exists(self.current_user)
+    assert_admin(self)
+    return { render = 'admin/bulk_import_users' }
 end))
 
 -- Student pages  
