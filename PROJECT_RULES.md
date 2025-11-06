@@ -110,6 +110,44 @@ app:get('/admin/bulk-import-users', ...)  -- ❌ 会被API路由拦截！
 - 原因: API路由的 `respond_to` 可能只定义了 POST，无法处理 GET
 - 解决: 检查 API 路由，重命名页面路由
 
+**最佳实践** 🌟:
+
+1. **命名约定**: 为避免冲突，建议使用以下命名规范：
+   ```lua
+   -- API 端点（RESTful风格）
+   POST /api/v1/admin/bulk-import-users
+   POST /api/v1/teachers/bulk-import-students
+   
+   -- 页面路由（使用不同的词汇）
+   GET /admin/import-users        -- 使用 "import" 而非 "bulk-import"
+   GET /teacher/import-students   -- 或添加 "-page" 后缀
+   GET /admin/user-import-page    -- 或使用不同的词序
+   ```
+
+2. **URL辅助函数**: 在代码中使用URL生成函数，而非硬编码路径：
+   ```lua
+   -- 在视图中
+   <a href="<%= url_for('admin_import_users') %>">批量导入</a>
+   
+   -- 在路由中定义名称
+   app:get('admin_import_users', '/admin/import-users', ...)
+   ```
+
+3. **检查清单**: 添加新的批量操作功能时：
+   - [ ] 检查 `api.lua` 中是否有类似的API端点
+   - [ ] 确保页面路由与API路由路径不同
+   - [ ] 在所有引用该功能的地方更新链接（管理员菜单、按钮等）
+   - [ ] 测试未登录和已登录状态下的访问
+
+4. **路由文档**: 在路由定义处添加注释说明：
+   ```lua
+   -- 批量导入用户页面（管理员）
+   -- 注意：避免与 API 路由 /api/v1/admin/bulk-import-users 冲突
+   app:get('/admin/import-users', capture_errors(function (self)
+       ...
+   end))
+   ```
+
 ---
 
 ## 多语言规则
@@ -633,7 +671,86 @@ git push origin feature-branch
 
 **解决方案**: 使用 `assert_exists` + `assert_*` 模式，始终返回 table
 
-### 2. 翻译键未找到
+### 2. 会话丢失/Cookie未传递
+
+**症状**: 
+- 点击链接后显示"未登录"或被重定向到首页
+- Cookie 在跨页面时丢失
+- 控制台显示 `500 Internal Server Error` 且 Cookie 未包含在请求中
+
+**原因**:
+1. **路由冲突**: API路由意外拦截了页面请求（参见"路由冲突避免"）
+2. **跨域问题**: 使用了不同的域名或协议（http vs https）
+3. **路径问题**: Cookie的路径设置不匹配
+4. **会话配置**: Lapis会话配置不正确
+
+**诊断步骤**:
+```bash
+# 1. 检查浏览器开发者工具 > Network > Headers
+#    查看 Request Headers 中是否有 Cookie
+#    查看 Response Headers 中的 Set-Cookie
+
+# 2. 检查路由是否被API拦截
+grep -r "你的路径" api.lua site.lua
+
+# 3. 检查会话配置
+grep -A 10 "session_name" config.lua
+```
+
+**解决方案**:
+
+1. **修复路由冲突** (最常见):
+   ```lua
+   -- 确保页面路由与API路由不冲突
+   -- API: /api/v1/admin/bulk-import-users
+   -- 页面: /admin/import-users (不同路径)
+   ```
+
+2. **检查域名一致性**:
+   ```lua
+   -- 在 config.lua 中
+   session_name = 'snapsession_' .. env_name,
+   cookie_attributes = {
+       path = '/',
+       domain = nil,  -- 自动使用当前域名
+       secure = false,  -- 开发环境设为false
+       httponly = true,
+       samesite = 'Lax'
+   }
+   ```
+
+3. **URL构建**: 始终使用相对路径或 `url_for()`：
+   ```lua
+   -- 正确 ✅
+   <a href="/admin/import-users">...</a>
+   <a href="<%= url_for('admin_import') %>">...</a>
+   
+   -- 错误 ❌ (硬编码域名可能导致跨域)
+   <a href="http://example.com/admin/import-users">...</a>
+   ```
+
+4. **AJAX请求**: 确保包含凭据：
+   ```javascript
+   fetch('/api/v1/something', {
+       method: 'POST',
+       credentials: 'same-origin',  // 重要！包含Cookie
+       headers: {
+           'Content-Type': 'application/json'
+       },
+       body: JSON.stringify(data)
+   })
+   ```
+
+**历史案例**:
+- **教师作业管理界面**: 点击"批量导入"后会话丢失
+  - 原因: API路由 `/(api/v1/)/teachers/bulk-import` 的可选括号导致拦截
+  - 解决: 重命名页面路由为不同路径
+
+- **管理员批量导入用户**: 同样的问题
+  - 原因: API路由 `/(api/v1/)/admin/bulk-import-users` 拦截页面请求
+  - 解决: 页面路由改为 `/admin/import-users`
+
+### 3. 翻译键未找到
 
 **症状**: 页面显示 `translation_key` 而非翻译文本
 

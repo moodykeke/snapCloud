@@ -589,8 +589,9 @@ app:get('/admin/import-users', capture_errors(function (self)
     end
 end))
 
--- Student pages  
-app:get('/student/assignments', capture_errors(function (self)
+-- Student pages
+-- 注意：路径避免与 API 路由 /api/v1/student/assignments 冲突  
+app:get('/student/my-assignments', capture_errors(function (self)
     assert_exists(self.current_user)
     if not self.current_user:is_student() then
         yield_error('需要学生权限')
