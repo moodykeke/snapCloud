@@ -396,6 +396,7 @@ Want to know more? Visit @2]],
     -- Buttons
     become = "Become", -- as an admin, temporarily impersonate this user
     verify = "Verify",
+    account_settings = "Account Settings",
     change_email = "Change Email",
     reset_password = "Reset Password",
     confirm_reset_password = "Are you sure you want to reset user @1's password?",

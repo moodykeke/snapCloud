@@ -341,6 +341,7 @@ local locale = {
     project_count = "项目数量",
     -- Buttons
     become = "成为", -- as an admin, temporarily impersonate this user
+    account_settings = "账户设置",
     change_email = "更改邮箱",
     send_msg = "发送消息",
     ban = "封禁",

@@ -22,22 +22,15 @@
                   </a>
                   <% end %>
                   
-                  <span class="text-muted small">
-                    <% if item.nickname and item.nickname ~= '' then %>
-                      (<%= item.nickname %>)
-                    <% else %>
-                      (未设置昵称)
-                    <% end %>
-                  </span>
+                  <% if item.nickname and item.nickname ~= '' then %>
+                  <span class="text-muted small">(<%= item.nickname %>)</span>
+                  <% end %>
                   
-                  <span class="text-muted small">
-                    <% if user_permissions.can_view_real_name(current_user, item) and 
-                           item.real_name and item.real_name ~= '' then %>
-                        <%= item.real_name %>
-                    <% else %>
-                        未设置
-                    <% end %>
-                  </span>
+                  <% if user_permissions.can_view_real_name(current_user, item) then %>
+                      <% if item.real_name and item.real_name ~= '' then %>
+                      <span class="text-muted small"><%= item.real_name %></span>
+                      <% end %>
+                  <% end %>
               </div>
               <div class="d-flex gap-1">
                   <% if not item.verified then %>
@@ -89,118 +82,80 @@
             </li>
             <% end %>
         
-        <% -- 项目统计（权限控制） %>
+        <% -- 项目统计（权限控制） - 紧凑显示 %>
         <% if show_project_count or current_user:has_min_role('moderator') then %>
             <% local project_stats = item:get_project_stats() %>
-            <li class="list-group-item" style="min-height: 80px;">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                        <div class="mb-2">
-                            <i class="fas fa-folder text-warning"></i>
-                            <strong><%- locale.get('projects') %></strong>
-                        </div>
-                        <% if project_stats and project_stats.total > 0 then %>
-                        <div class="d-flex gap-2 flex-wrap">
-                            <% -- 总项目数 %>
-                            <a href="/user_projects/<%- item.username %>" 
-                               class="badge rounded-pill text-bg-primary text-decoration-none" 
-                               title="<%- locale.get('view_all_projects') %>">
-                                <i class="fas fa-list"></i> <%- locale.get('total') %>: <%= project_stats.total %>
-                            </a>
-                            <% if current_user:has_min_role('moderator') or current_user.username == item.username then %>
-                            <% -- 分享项目数 %>
-                            <a href="/user_projects/<%- item.username %>?filter=shared" 
-                               class="badge rounded-pill text-bg-info text-decoration-none"
-                               title="<%- locale.get('view_shared_projects') %>">
-                                <i class="fas fa-share-alt"></i> <%- locale.get('shared') %>: <%= project_stats.shared %>
-                            </a>
-                            <% -- 发布项目数 %>
-                            <a href="/user_projects/<%- item.username %>?filter=published"
-                               class="badge rounded-pill text-bg-success text-decoration-none"
-                               title="<%- locale.get('view_published_projects') %>">
-                                <i class="fas fa-globe"></i> <%- locale.get('published') %>: <%= project_stats.published %>
-                            </a>
-                            <% end %>
-                        </div>
-                        <% else %>
-                        <span class="text-muted fst-italic small"><%- locale.get('no_projects') %></span>
-                        <% end %>
-                    </div>
-                    <a href="/user?username=<%- item.username %>" 
-                       class="btn btn-sm btn-outline-primary" 
-                       title="<%- locale.get('view_user_page') %>">
-                        <i class="fas fa-arrow-right"></i>
+            <li class="list-group-item">
+                <i class="fas fa-folder text-muted"></i>
+                <strong class="ms-1"><%- locale.get('projects') %></strong>:
+                <% if project_stats and project_stats.total > 0 then %>
+                    <a href="/user_projects/<%- item.username %>" 
+                       class="text-decoration-none ms-1"
+                       title="<%- locale.get('view_all_projects') %>">
+                        <span class="badge text-bg-secondary"><%= project_stats.total %></span>
                     </a>
-                </div>
+                    <% -- 分享和发布统计始终显示（如果大于0） %>
+                    <% if project_stats.shared > 0 then %>
+                    <span class="text-muted mx-1">|</span>
+                    <a href="/user_projects/<%- item.username %>?filter=shared" 
+                       class="text-decoration-none"
+                       title="<%- locale.get('view_shared_projects') %>">
+                        <i class="fas fa-share-alt text-info"></i>
+                        <span class="small"><%= project_stats.shared %></span>
+                    </a>
+                    <% end %>
+                    <% if project_stats.published > 0 then %>
+                    <span class="text-muted mx-1">|</span>
+                    <a href="/user_projects/<%- item.username %>?filter=published"
+                       class="text-decoration-none"
+                       title="<%- locale.get('view_published_projects') %>">
+                        <i class="fas fa-globe text-success"></i>
+                        <span class="small"><%= project_stats.published %></span>
+                    </a>
+                    <% end %>
+                <% else %>
+                    <span class="text-muted small ms-1">0</span>
+                <% end %>
             </li>
         <% end %>
         
-        <% -- 学生统计信息（合并到一行） %>
-        <% if item:is_student() and 
-               user_permissions.can_view_student_stats(current_user, item) then %>
-            <% 
-            local classes = item:get_classes()
-            local stats = item:get_assignment_stats()
-            %>
-            
+                <% -- 学生统计（班级 + 作业统计） - 紧凑显示 %>
+        <% if current_user:has_min_role('moderator') and can_view_student_stats then %>
+            <% local classes = item:get_student_classes() %>
+            <% local stats = item:get_assignment_stats() %>
             <li class="list-group-item">
-                <div class="row g-2">
-                    <% -- 左列：班级信息 %>
-                    <div class="col-6">
-                        <div class="mb-1">
-                            <i class="fas fa-users text-primary"></i>
-                            <strong><%- locale.get('classes') %></strong>:
-                            <% if classes and #classes > 0 then %>
-                            <span class="badge rounded-pill text-bg-info"><%= #classes %></span>
-                            <% else %>
-                            <span class="text-muted fst-italic small">0</span>
-                            <% end %>
-                        </div>
-                        <% if classes and #classes > 0 then %>
-                        <div class="small text-muted">
-                            <% for i, class in ipairs(classes) do %>
-                                <% if i <= 2 then %>
-                                <div class="text-truncate" style="max-width: 100%;">
-                                    • <%= class.name %>
-                                </div>
-                                <% end %>
-                            <% end %>
-                            <% if #classes > 2 then %>
-                            <div class="fst-italic">+ <%= #classes - 2 %> <%- locale.get('more') %></div>
-                            <% end %>
-                        </div>
+                <% -- 班级信息 %>
+                <div class="mb-2">
+                    <i class="fas fa-users text-muted"></i>
+                    <strong class="ms-1"><%- locale.get('classes') %></strong>:
+                    <% if classes and #classes > 0 then %>
+                        <span class="badge text-bg-secondary"><%= #classes %></span>
+                        <span class="small text-muted ms-1">
+                        <% for i, class in ipairs(classes) do %>
+                            <%= i > 1 and ', ' or '' %><%= class.name %>
                         <% end %>
-                    </div>
-                    
-                    <% -- 右列：作业信息 %>
-                    <div class="col-6">
-                        <div class="mb-1">
-                            <i class="fas fa-tasks text-success"></i>
-                            <strong><%- locale.get('assignments') %></strong>:
-                            <% if stats and stats.total > 0 then %>
-                            <span class="badge rounded-pill text-bg-secondary"><%= stats.total %></span>
-                            <% else %>
-                            <span class="text-muted fst-italic small">0</span>
+                        </span>
+                    <% else %>
+                        <span class="text-muted small ms-1">-</span>
+                    <% end %>
+                </div>
+                
+                <% -- 作业统计 %>
+                <div>
+                    <i class="fas fa-tasks text-muted"></i>
+                    <strong class="ms-1"><%- locale.get('assignments') %></strong>:
+                    <% if stats and stats.total > 0 then %>
+                        <span class="badge text-bg-secondary"><%= stats.total %></span>
+                        <span class="small text-muted ms-1">
+                            <i class="fas fa-check-circle text-success"></i> <%= stats.submitted %>
+                            <% if stats.avg_points > 0 then %>
+                            | <i class="fas fa-star text-muted"></i> <%= string.format("%.1f", stats.avg_points) %>
                             <% end %>
-                        </div>
-                        <% if stats and stats.total > 0 then %>
-                        <div class="small">
-                            <div class="progress mb-1" style="height: 16px;">
-                                <div class="progress-bar bg-success" 
-                                     role="progressbar" 
-                                     style="width: <%= stats.completion_rate %>%">
-                                    <%= stats.completion_rate %>%
-                                </div>
-                            </div>
-                            <div class="text-muted">
-                                <i class="fas fa-check-circle text-success"></i> <%= stats.submitted %>/<%= stats.total %>
-                                <% if stats.avg_points > 0 then %>
-                                <br><i class="fas fa-star text-warning"></i> <%= string.format("%.1f", stats.avg_points) %>
-                                <% end %>
-                            </div>
-                        </div>
-                        <% end %>
-                    </div>
+                            (<%= stats.completion_rate %>%)
+                        </span>
+                    <% else %>
+                        <span class="text-muted small ms-1">-</span>
+                    <% end %>
                 </div>
             </li>
         <% end %>        <% if not zombie and current_user:has_min_role('moderator') then %>
@@ -279,102 +234,120 @@
         </ul>
     <div class="card-footer user-profile-actions">
         <% if not zombie then %>
-            <% if current_user:has_min_role('admin') then %>
-            <div class="btn-group">
-                <a class="btn btn-sm btn-outline-secondary become"
-                    onclick="cloud.post('/users/<%= item.username %>/become');"
-                    ><%- locale.get('become') %></a>
-            <% if not item.verified and
-                (current_user:has_min_role('moderator')) then %>
-                <a class="btn btn-sm btn-outline-success verify"
-                    onclick="cloud.post('/users/<%= item.username %>/verify');"
-                    ><%- locale.get('verify') %></a>
-            <% end %>
-            </div>
-            <% end %>
-            <div class="btn-group" role="group" aria-label="password actions">
-                <% if current_user:has_min_role('moderator') or
-                        (current_user.is_teacher and
-                            item.creator_id == current_user.id) then %>
+            <% -- 主要操作按钮 %>
+            <div class="btn-group mb-2" role="group">
+                <% if current_user:has_min_role('admin') then %>
                 <a class="btn btn-sm btn-outline-secondary"
-                    onclick="
-                        prompt(
-                            '<%- locale.get('new_email') %>',
-                            email => {
-                                cloud.post(
-                                    '/users/<%= item.username %>/change_email',
-                                    null,
-                                    {
-                                        email: email,
-                                        username: '<%= item.username %>'
-                                    }
-                                );
-                            },
-                            nop
-                        );
-                    "><%- locale.get('change_email') %></a>
-                <a class="btn btn-sm btn-outline-secondary"
-                    onclick="
-                        confirm(
-                            '<%= package.loaded.html.escape(locale.get(
-                                    'confirm_reset_password',
-                                    item.username
-                                ))
-                            %>',
-                            () => {
-                                cloud.post(
-                                    '/users/<%= item.username %>/password_reset'
-                                );
-                            }
-                        );
-                    "><%- locale.get('reset_password') %></a>
-                    <a class="btn btn-sm btn-outline-secondary"
-                    onclick="
-                        prompt(
-                            '<%- locale.get('new_username', item.username) %>',
-                            username => {
-                                cloud.post(
-                                    '/users/<%= item.username %>/change_username',
-                                    null,
-                                    {
-                                        new_username: username
-                                    }
-                                );
-                            },
-                            nop
-                        );
-                    "><%- locale.get('change_username') %></a>
+                    onclick="cloud.post('/users/<%= item.username %>/become');">
+                    <i class="fas fa-user-secret"></i> <%- locale.get('become') %>
+                </a>
                 <% end %>
-        </div>
-        <% end %>
-        <% if current_user:has_min_role('moderator') then %>
-        <div class="btn-group">
-            <a class="btn btn-sm btn-outline-info"
-                onclick="
-                    dialog(
-                        '<%- locale.get('compose_email') %>',
-                        '<%= package.loaded.dialog('compose_email') %>',
-                        () => {
-                            var form =
-                                document.querySelector('form.email-compose'),
-                                subject = form.querySelector('input').value,
-                                contents = form.querySelector('textarea').value;
-                            cloud.post(
-                                '/users/<%= item.username %>/send_email',
-                                null,
-                                {
-                                    subject: subject,
-                                    contents: contents
-                                }
-                            );
-                        },
-                        nop
-                    );
-                "><%- locale.get('send_msg') %></a>
+                <% if current_user:has_min_role('moderator') then %>
+                <a class="btn btn-sm btn-outline-info"
+                    onclick="
+                        dialog(
+                            '<%- locale.get('compose_email') %>',
+                            '<%= package.loaded.dialog('compose_email') %>',
+                            () => {
+                                var form = document.querySelector('form.email-compose'),
+                                    subject = form.querySelector('input').value,
+                                    contents = form.querySelector('textarea').value;
+                                cloud.post(
+                                    '/users/<%= item.username %>/send_email',
+                                    null,
+                                    { subject: subject, contents: contents }
+                                );
+                            },
+                            nop
+                        );
+                    ">
+                    <i class="fas fa-envelope"></i> <%- locale.get('send_msg') %>
+                </a>
+                <% end %>
+                
+                <% -- 账户操作下拉菜单 %>
+                <% if current_user:has_min_role('moderator') or
+                        (current_user.is_teacher and item.creator_id == current_user.id) then %>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-cog"></i> <%- locale.get('account_settings') %>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item" href="#"
+                                onclick="
+                                    prompt(
+                                        '<%- locale.get('new_email') %>',
+                                        email => {
+                                            cloud.post(
+                                                '/users/<%= item.username %>/change_email',
+                                                null,
+                                                { email: email, username: '<%= item.username %>' }
+                                            );
+                                        },
+                                        nop
+                                    );
+                                    return false;
+                                ">
+                                <i class="fas fa-envelope"></i> <%- locale.get('change_email') %>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#"
+                                onclick="
+                                    confirm(
+                                        '<%= package.loaded.html.escape(locale.get(
+                                                'confirm_reset_password',
+                                                item.username
+                                            ))
+                                        %>',
+                                        () => {
+                                            cloud.post('/users/<%= item.username %>/password_reset');
+                                        }
+                                    );
+                                    return false;
+                                ">
+                                <i class="fas fa-key"></i> <%- locale.get('reset_password') %>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#"
+                                onclick="
+                                    prompt(
+                                        '<%- locale.get('new_username', item.username) %>',
+                                        username => {
+                                            cloud.post(
+                                                '/users/<%= item.username %>/change_username',
+                                                null,
+                                                { new_username: username }
+                                            );
+                                        },
+                                        nop
+                                    );
+                                    return false;
+                                ">
+                                <i class="fas fa-user-edit"></i> <%- locale.get('change_username') %>
+                            </a>
+                        </li>
+                        <% if not item.verified and current_user:has_min_role('moderator') then %>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-success" href="#"
+                                onclick="cloud.post('/users/<%= item.username %>/verify'); return false;">
+                                <i class="fas fa-check-circle"></i> <%- locale.get('verify') %>
+                            </a>
+                        </li>
+                        <% end %>
+                    </ul>
+                </div>
+                <% end %>
             </div>
-            <div class="btn-group" role="group" aria-label="unsafe actions">
-                <% if not zombie then %>
-                <a class="btn btn-sm ban btn-outline-danger"
+            
+            <% -- 危险操作按钮 %>
+            <% if current_user:has_min_role('moderator') then %>
+            <div class="btn-group mb-2" role="group" aria-label="unsafe actions">
+                <a class="btn btn-sm btn-outline-danger"
                     onclick="
                         cloud.post(
                             '/users/<%= item.username %>/set_role',
@@ -386,12 +359,11 @@
                                         and "'standard'"
                                         or "'banned'" %>
                             }
-                        );"
-                    ><%= item.role == 'banned' and
-                        locale.get('unban') or
-                        locale.get('ban') %></a>
-                <% end %>
-                <a class="btn btn-sm delete btn-outline-danger"
+                        );">
+                    <i class="fas fa-ban"></i>
+                    <%= item.role == 'banned' and locale.get('unban') or locale.get('ban') %>
+                </a>
+                <a class="btn btn-sm btn-outline-danger"
                     onclick="
                         confirm(
                             '<%=
@@ -400,16 +372,18 @@
                                     { username = item.username })
                             %>',
                             () => {
-                                cloud.delete(
-                                    '/<%= zombie and 'zombies' or 'users' %>/<%= item.username %>'
-                                );
+                                cloud.delete('/users/<%= item.username %>');
                             }
                         );
-                    "
-                    ><%-
-                        locale.get(zombie and 'perma_delete_usr' or 'delete_usr')
-                    %></a>
-                <% if zombie then %>
+                    ">
+                    <i class="fas fa-trash"></i> <%- locale.get('delete_usr') %>
+                </a>
+            </div>
+            <% end %>
+        <% else %>
+            <% -- Zombie 用户操作 %>
+            <% if current_user:has_min_role('moderator') then %>
+            <div class="btn-group mb-2" role="group">
                 <a class="btn btn-sm btn-outline-secondary"
                     onclick="
                         confirm(
@@ -418,11 +392,26 @@
                                 cloud.post('/zombies/<%= item.username %>/revive');
                             }
                         );
-                    "
-                    ><%- locale.get('revive_usr') %></a>
-                <% end %>
+                    ">
+                    <i class="fas fa-heart"></i> <%- locale.get('revive_usr') %>
+                </a>
+                <a class="btn btn-sm btn-outline-danger"
+                    onclick="
+                        confirm(
+                            '<%=
+                                package.loaded.dialog(
+                                    'delete_user',
+                                    { username = item.username })
+                            %>',
+                            () => {
+                                cloud.delete('/zombies/<%= item.username %>');
+                            }
+                        );
+                    ">
+                    <i class="fas fa-trash"></i> <%- locale.get('perma_delete_usr') %>
+                </a>
             </div>
+            <% end %>
         <% end %>
-        </div>
     </div>
 </div>
