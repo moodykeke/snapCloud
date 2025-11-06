@@ -10,8 +10,8 @@
         'views.grid',
         {
             class = 'users',
-            item_type = 'user',
-            items_per_row = 3
+            item_type = 'profile',
+            items_per_row = 12
         }
     )
 %>
