@@ -84,20 +84,27 @@
             <% local project_stats = item:get_project_stats() %>
             <% if project_stats.total > 0 then %>
             <li class="list-group-item">
-                <i class="fas fa-folder text-warning"></i>
-                <strong><%- locale.get('projects') %></strong>:
-                <a href="<%= item:url_for('site') %>" class="text-decoration-none">
-                    <span class="badge rounded-pill text-bg-primary" title="<%- locale.get('total_projects') %>">
-                        <%= project_stats.total %>
-                    </span>
-                </a>
-                <% if current_user:has_min_role('moderator') or current_user.username == item.username then %>
-                <span class="ms-2 small text-muted">
-                    <i class="fas fa-share-alt text-info"></i> <%= project_stats.shared %>
-                    <span class="mx-1">|</span>
-                    <i class="fas fa-globe text-success"></i> <%= project_stats.published %>
-                </span>
-                <% end %>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-folder text-warning"></i>
+                        <strong><%- locale.get('projects') %></strong>:
+                        <a href="/user?username=<%= item.username %>" class="text-decoration-none" title="<%- locale.get('view_user_projects') %>">
+                            <span class="badge rounded-pill text-bg-primary">
+                                <%= project_stats.total %>
+                            </span>
+                        </a>
+                        <% if current_user:has_min_role('moderator') or current_user.username == item.username then %>
+                        <span class="ms-2 small text-muted">
+                            <i class="fas fa-share-alt text-info"></i> <%= project_stats.shared %>
+                            <span class="mx-1">|</span>
+                            <i class="fas fa-globe text-success"></i> <%= project_stats.published %>
+                        </span>
+                        <% end %>
+                    </div>
+                    <a href="/user?username=<%= item.username %>" class="btn btn-sm btn-outline-primary" title="<%- locale.get('view_user_page') %>">
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
             </li>
             <% end %>
         <% end %>

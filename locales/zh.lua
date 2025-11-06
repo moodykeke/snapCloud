@@ -655,6 +655,9 @@ local locale = {
     unverified = "未验证",
     more_items = "还有 @1 项",
     total_projects = "总项目数",
+    view_user_projects = "查看用户的项目",
+    view_user_page = "进入用户页面",
+    all_projects = "所有项目",
     
     -- User Actions (新增字段)
     confirm_action = "确认操作",

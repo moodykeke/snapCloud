@@ -6,16 +6,20 @@
 <h1><%= locale.get('public_page', username) %></h1>
 
 <%
--- PUBLIC PROJECTS
+-- 判断是否显示所有项目（用户本人或管理员）
+local show_all_projects = current_user and 
+    (current_user.username == username or current_user:has_min_role('moderator'))
+
+-- PROJECTS (ALL or PUBLIC based on permissions)
 render(
     'views.carousel',
     {
-        title = locale.get('latest_published_projects'),
+        title = show_all_projects and locale.get('all_projects') or locale.get('latest_published_projects'),
         items = ProjectController.user_projects({
             params = {
                 username = username,
                 items_per_page = 24,
-                show_public = true
+                show_public = not show_all_projects  -- 如果能看所有项目，就不设置 show_public
             },
             session = session,
             req = { source = 'site' }
