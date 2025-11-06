@@ -35,6 +35,7 @@ local AllUsers = package.loaded.AllUsers
 local Collections = package.loaded.Collections
 local Tokens = package.loaded.Tokens
 local Followers = package.loaded.Followers
+local AuditLogs = require('models.audit_logs')
 
 require 'responses'
 require 'passwords'
@@ -698,11 +699,26 @@ UserController = {
             local old_role = self.queried_user.role
             self.queried_user:update({ role = self.params.role })
             
-            -- 记录操作日志
+            -- 文件日志（便于grep查看）
             ngx.log(ngx.WARN, 
                 string.format("[AUDIT] Role changed: user=%s, old_role=%s, new_role=%s, operator=%s", 
                     self.queried_user.username, old_role, self.params.role, 
                     self.current_user.username))
+            
+            -- 数据库审计日志（持久化存储）
+            pcall(function()
+                AuditLogs:log({
+                    action = 'set_role',
+                    operator = self.current_user,
+                    target_type = 'user',
+                    target_id = self.queried_user.id,
+                    target_username = self.queried_user.username,
+                    old_value = { role = old_role },
+                    new_value = { role = self.params.role },
+                    ip_address = self.req.headers['x-real-ip'] or self.req.headers['x-forwarded-for'] or ngx.var.remote_addr,
+                    user_agent = self.req.headers['user-agent']
+                })
+            end)
         end
         return jsonResponse({
             message =
@@ -720,11 +736,26 @@ UserController = {
             local old_status = self.queried_user.is_teacher
             self.queried_user:update({ is_teacher = self.params.is_teacher })
             
-            -- 记录操作日志
+            -- 文件日志
             ngx.log(ngx.WARN,
                 string.format("[AUDIT] Teacher status changed: user=%s, old=%s, new=%s, operator=%s",
                     self.queried_user.username, tostring(old_status), 
                     tostring(self.params.is_teacher), self.current_user.username))
+            
+            -- 数据库审计日志
+            pcall(function()
+                AuditLogs:log({
+                    action = 'set_teacher',
+                    operator = self.current_user,
+                    target_type = 'user',
+                    target_id = self.queried_user.id,
+                    target_username = self.queried_user.username,
+                    old_value = { is_teacher = old_status },
+                    new_value = { is_teacher = self.params.is_teacher },
+                    ip_address = self.req.headers['x-real-ip'] or self.req.headers['x-forwarded-for'] or ngx.var.remote_addr,
+                    user_agent = self.req.headers['user-agent']
+                })
+            end)
         end
         return jsonResponse({
             message =
