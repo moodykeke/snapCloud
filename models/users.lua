@@ -211,6 +211,7 @@ local ActiveUsers = Model:extend('active_users', {
         local db = package.loaded.db
         
         -- 查询学生的作业统计
+        -- 作业通过collection_id关联到班级，班级ID在class_memberships中
         local result = db.query([[
             SELECT 
                 COUNT(DISTINCT a.id) as total_assignments,
@@ -219,11 +220,9 @@ local ActiveUsers = Model:extend('active_users', {
             FROM assignments a
             LEFT JOIN submissions s ON a.id = s.assignment_id AND s.student_id = ?
             WHERE a.deleted_at IS NULL
-                AND a.class_id IN (
-                    SELECT class_id FROM class_memberships 
-                    WHERE student_id = ? AND deleted_at IS NULL
-                )
-        ]], self.id, self.id)
+                AND a.published = true
+                AND a.teacher_id = ?
+        ]], self.id, self.creator_id or 0)
         
         if not result or not result[1] then
             return {

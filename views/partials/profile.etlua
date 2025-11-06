@@ -1,5 +1,6 @@
 <%
   local util = require 'lib.util'
+  local user_permissions = require 'lib.user_permissions'
   card_classes = (item.role or '') .. ' ' .. (item.verified and '' or 'unverified')
   role_bg_color = ({
     moderator = 'info',
@@ -17,6 +18,12 @@
           <% if not zombie then %>
           </a>
           <% end %>
+          <% -- 显示昵称（如果存在） %>
+          <% if item.nickname and item.nickname ~= '' then %>
+            <div class="text-muted small mt-1">
+              <i class="fas fa-tag"></i> <%= item.nickname %>
+            </div>
+          <% end %>
           <% if not item.verified then %>
             <span class="badge rounded-pill text-bg-warning">unverified</span>
           <% end %>
@@ -33,6 +40,14 @@
                     <code><%- util.visualize_whitespace_html(item.unique_email) %></code>
                 <% end %>
             </li>
+            <% -- 显示真实姓名（权限控制） %>
+            <% if user_permissions.can_view_real_name(current_user, item) and 
+                   item.real_name and item.real_name ~= '' then %>
+            <li class="list-group-item">
+                <i class="fas fa-id-card text-success"></i>
+                <strong><%- locale.get('real_name') %></strong>: <%= item.real_name %>
+            </li>
+            <% end %>
             <% if current_user:has_min_role('moderator') then %>
             <li class="list-group-item">
                 <strong><%- locale.get('user_id') %></strong>: <%= item.id %>
@@ -61,6 +76,62 @@
             <a href="/user?user_id=<%= item.creator_id %>"><%= item.creator_id %></a>
         </li>
         <% end %>
+        
+        <% -- 显示学生统计信息（班级和作业） %>
+        <% if item:is_student() and 
+               user_permissions.can_view_student_stats(current_user, item) then %>
+            <% 
+            local classes = item:get_classes()
+            local stats = item:get_assignment_stats()
+            %>
+            
+            <% -- 所属班级 %>
+            <% if classes and #classes > 0 then %>
+            <li class="list-group-item">
+                <i class="fas fa-users text-primary"></i>
+                <strong><%- locale.get('classes') %></strong>:
+                <span class="badge rounded-pill text-bg-info"><%= #classes %></span>
+                <div class="mt-2 small">
+                    <% for _, class in ipairs(classes) do %>
+                    <div class="text-muted">
+                        • <%= class.name %>
+                        (<a href="/user/<%= class.teacher_username %>"><%= class.teacher_username %></a>)
+                    </div>
+                    <% end %>
+                </div>
+            </li>
+            <% end %>
+            
+            <% -- 作业统计 %>
+            <% if stats and stats.total > 0 then %>
+            <li class="list-group-item">
+                <i class="fas fa-tasks text-success"></i>
+                <strong><%- locale.get('assignment_stats') %></strong>
+                <div class="mt-2">
+                    <div class="progress mb-2" style="height: 20px;">
+                        <div class="progress-bar bg-success" 
+                             role="progressbar" 
+                             style="width: <%= stats.completion_rate %>%"
+                             aria-valuenow="<%= stats.completion_rate %>" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                            <%= stats.completion_rate %>%
+                        </div>
+                    </div>
+                    <div class="small">
+                        <i class="fas fa-check-circle text-success"></i>
+                        <%- locale.get('submitted') %>: <%= stats.submitted %>/<%= stats.total %>
+                        <% if stats.avg_points > 0 then %>
+                        <br>
+                        <i class="fas fa-star text-warning"></i>
+                        <%- locale.get('average_score') %>: <%= string.format("%.1f", stats.avg_points) %>
+                        <% end %>
+                    </div>
+                </div>
+            </li>
+            <% end %>
+        <% end %>
+        
         <% if not zombie and current_user:has_min_role('moderator') then %>
         <li class="list-group-item">
             <div class="input-group">
