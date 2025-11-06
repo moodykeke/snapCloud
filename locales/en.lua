@@ -528,6 +528,7 @@ Want to know more? Visit @2]],
     completion_rate = "Completion Rate",
     creator = "Creator",
     unverified = "Unverified",
+    more_items = "@1 more",
     confirm_action = "Confirm Action",
     delete_user = "Confirm delete user @1?",
 }
